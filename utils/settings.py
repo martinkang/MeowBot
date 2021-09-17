@@ -6,7 +6,7 @@ from typing import List
 
 # ---------- Settings ----------
 MAX_NUM_TOP: int = 100
-SEARCH_TOP_RANK = 5
+SEARCH_TOP_RANK = 10
 
 DATABASE_SSL_MODE: str = os.environ.get('DATABASE_SSL_MODE', 'require')
 DATABASE_URL: str = f'{os.environ.get("DATABASE_URL")}?sslmode={DATABASE_SSL_MODE}'

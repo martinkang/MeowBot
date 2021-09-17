@@ -1,4 +1,4 @@
-
+import sys
 from asyncio.tasks import sleep
 from datetime import date, datetime
 from typing import Dict, List, Tuple
@@ -348,12 +348,18 @@ async def on_ready():
 
 async def initBot():
     print( 'init Bot' )
-    _time.init()
-    _func.init()
-    await db._init()
-    print( 'init Bot Success' )
+    try:
+        _time.init()
+        _func.init()
+        await db._init()
+        print( 'init Bot Success' )
+    except:
+        print( 'init Bot Failure' )
+        sys.exit()
+
     sKey = await _func.get_access_key()
-    
+   
+
 if __name__ == "__main__":
     asyncio.run( initBot() )
     

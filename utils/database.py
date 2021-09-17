@@ -26,7 +26,7 @@ async def _init():
         _dbFunc._create_schema()
         await _dbFunc._initSchema()
     else:
-        print( "init pool failure")
+        raise Exception( "init pool failure" )
     
     
 def _initConf():  
@@ -54,22 +54,22 @@ def _initConf():
 
 async def _initPool():
     global gConnectPool
-    
+
     sSuccess = False
     try:
         gConnectPool = await aiomysql.create_pool( host=gHost, 
-                                                    port=gPort, 
-                                                    user=gUser, 
-                                                    password=gPW, 
-                                                    db=gDB, 
-                                                    autocommit=gAutocommit,
-                                                    loop=gLoop )
+                                                   port=gPort, 
+                                                   user=gUser, 
+                                                   password=gPW, 
+                                                   db=gDB, 
+                                                   autocommit=gAutocommit,
+                                                   loop=gLoop )
 
         print( "initialize pool success")
         sSuccess = True
             
     except Exception as sEx:
-        _func.debug_log( "_initialize_pool", sEx)
+        _func.debug_log( "_initialize_pool", sEx )
         sSuccess = False
         
     return sSuccess
