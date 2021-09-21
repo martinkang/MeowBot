@@ -18,7 +18,9 @@ import pss_fleet as fleet
 import pss_lookups as lookups
 import pss_user as user
 import utils
+
 from utils import functions as _func
+from utils import time as _time
 from utils.functions import EntitiesData, EntityInfo
 
 
@@ -416,7 +418,7 @@ class TourneyDataClient():
                 raise ValueError(f'There\'s no data from {calendar.month_name[month]} {year}. Earliest data available is from {calendar.month_name[self.from_month]} {self.from_year}.')
         if not initializing:
             if year > self.to_year or (year == self.to_year and month > self.to_month):
-                utc_now = utils.get_utc_now()
+                utc_now = _time.get_utc_now()
                 if utc_now.year == year and utc_now.month == month:
                     raise ValueError(f'There\'s no data from {calendar.month_name[month]} {year}. Most recent data available is from {calendar.month_name[self.to_month]} {self.to_year}.')
 
@@ -430,7 +432,7 @@ class TourneyDataClient():
 
 
     def get_latest_data(self, initializing: bool = False) -> TourneyData:
-        utc_now = utils.get_utc_now()
+        utc_now = _time.get_utc_now()
         year, month = TourneyDataClient.__get_tourney_year_and_month(utc_now)
         result = None
         while year > self.from_year or month >= self.from_month:
@@ -515,7 +517,7 @@ class TourneyDataClient():
         credentials = pydrive.auth.ServiceAccountCredentials.from_json_keyfile_name(self._service_account_file_path, self._scopes)
         self.__gauth.credentials = credentials
         self.__drive: pydrive.drive.GoogleDrive = pydrive.drive.GoogleDrive(self.__gauth)
-        self.get_latest_data(initializing=True)
+        #self.get_latest_data(initializing=True)
         self.__initialized = True
 
 
@@ -638,7 +640,7 @@ class TourneyDataClient():
     @staticmethod
     def retrieve_past_month_year(month: str, year: str, utc_now: datetime) -> Tuple[int, int]:
         if not utc_now:
-            utc_now = utils.get_utc_now()
+            utc_now = _time.get_utc_now()
 
         if month is None:
             temp_month = (utc_now.month - 2) % 12 + 1
