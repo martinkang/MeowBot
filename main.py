@@ -375,8 +375,8 @@ async def initBot():
         print( 'Database initilaize Success' )
         
         print( 'init Bot Success' )
-    except:
-        print( 'init Bot Failure' )
+    except Exception as sEx:
+        print( 'init Bot Failure : ' + sEx )
         sys.exit()
 
     sKey = await _func.get_access_key()

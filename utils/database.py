@@ -19,7 +19,13 @@ from typing import Any, Callable, Dict, List, Tuple, Union
 PSS_API_KEY_VERSION = 1
 
 async def _init():
-    _initConf()
+    sInitConfSuccess = _initConf()
+    if sInitConfSuccess:
+        print("init Database configure success")
+    else:
+        raise Exception( "init Database configure failure" )
+        return
+
     sInitPoolSuccess = await _initPool()
     if sInitPoolSuccess:
         print( "init pool success")
@@ -40,16 +46,24 @@ def _initConf():
     global gAutocommit
     global gLoop
 
-    gConfig = configparser.ConfigParser()
-    gConfig.read('conf/db.conf', encoding='utf-8')
-    gUser = gConfig['DATABASE']['USER']
-    gPW = gConfig['DATABASE']['PASSWORD']
-    gHost = gConfig['DATABASE']['HOST']
-    gPort = int( gConfig['DATABASE']['PORT'] )
-    gAutocommit = gConfig['DATABASE']['AUTOCOMMIT']
-    gDB = gConfig['DATABASE']['DB']
-    gMaxPoolSize = gConfig['DATABASE']['MAX_POOL_SIZE']
-    gLoop = asyncio.get_event_loop()
+    sSuccess = False
+    try:
+        gConfig = configparser.ConfigParser()
+        gConfig.read('conf/db.conf', encoding='utf-8')
+        gUser = gConfig['DATABASE']['USER']
+        gPW = gConfig['DATABASE']['PASSWORD']
+        gHost = gConfig['DATABASE']['HOST']
+        gPort = int( gConfig['DATABASE']['PORT'] )
+        gAutocommit = gConfig['DATABASE']['AUTOCOMMIT']
+        gDB = gConfig['DATABASE']['DB']
+        gMaxPoolSize = gConfig['DATABASE']['MAX_POOL_SIZE']
+        gLoop = asyncio.get_event_loop()
+        sSuccess = True
+    except Exception as sEx:
+        _func.debug_log( "_initConf", sEx )
+        sSuccess = False
+
+    return sSuccess
 
 
 async def _initPool():
@@ -69,7 +83,7 @@ async def _initPool():
         sSuccess = True
             
     except Exception as sEx:
-        _func.debug_log( "_initialize_pool", sEx )
+        _func.debug_log( "_initPool", sEx )
         sSuccess = False
         
     return sSuccess
