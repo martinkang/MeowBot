@@ -368,8 +368,12 @@ async def initBot():
     print( 'init Bot' )
     try:
         _time.init()
+        print( 'Time Function initilaize Success' )
         _func.init()
+        print( 'Internal Function initilaize Success' )
         await db._init()
+        print( 'Database initilaize Success' )
+        
         print( 'init Bot Success' )
     except:
         print( 'init Bot Failure' )
