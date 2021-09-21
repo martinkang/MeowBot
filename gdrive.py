@@ -21,6 +21,7 @@ import utils
 
 from utils import functions as _func
 from utils import time as _time
+from utils import parse as _parse
 from utils.functions import EntitiesData, EntityInfo
 
 
@@ -361,8 +362,8 @@ class TourneyData(object):
         hours, minutes = divmod(minutes, 60)
         days, hours = divmod(hours, 24)
         td = timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
-        dt = utils.constants.PSS_START_DATETIME + td
-        result = utils.format.pss_datetime(dt)
+        dt = _time.PSS_START_DATETIME + td
+        result = _parse.pss_datetime(dt)
         return result
 
 
@@ -391,6 +392,8 @@ class TourneyDataClient():
 
         self.__initialized = False
         self.__initialize()
+
+        _func.debug_log( "TourneyDataClient", "TourneyDataClient initialize success" )
 
 
     @property

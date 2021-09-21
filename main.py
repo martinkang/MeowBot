@@ -1,3 +1,4 @@
+from gdrive import TourneyData
 import sys
 from asyncio.tasks import sleep
 from datetime import date, datetime
@@ -30,7 +31,8 @@ from utils import path as _path
 from utils import discord as _discord
 from utils import format as _format
 
-from gdrive import TourneyDataClient
+import pss_tournament
+
 
 #==============================================================================================
 # Constant
@@ -38,22 +40,6 @@ from gdrive import TourneyDataClient
 NEED_SHIP_INFO: bool = True
 DO_NOT_NEED_SHIP_INFO: bool = False
 
-
-#==============================================================================================
-# GDRIVE
-#==============================================================================================
-TOURNEY_DATA_CLIENT: TourneyDataClient = TourneyDataClient(
-    _settings.GDRIVE_PROJECT_ID,
-    _settings.GDRIVE_PRIVATE_KEY_ID,
-    _settings.GDRIVE_PRIVATE_KEY,
-    _settings.GDRIVE_CLIENT_EMAIL,
-    _settings.GDRIVE_CLIENT_ID,
-    _settings.GDRIVE_SCOPES,
-    _settings.GDRIVE_FOLDER_ID,
-    _settings.GDRIVE_SERVICE_ACCOUNT_FILE,
-    _settings.GDRIVE_SETTINGS_FILE,
-    _settings.TOURNAMENT_DATA_START_DATE
-)
 #==============================================================================================
 # Global Variables
 #==============================================================================================
@@ -375,7 +361,8 @@ async def initBot():
         print( 'Internal Function initilaize Success' )
         await db._init()
         print( 'Database initilaize Success' )
-        
+        T = pss_tournament.getToureyRawData(2021,7)
+        print( T.__users[4419308])
         print( 'init Bot Success' )
     except Exception as sEx:
         print( 'init Bot Failure : ' + str(sEx) )

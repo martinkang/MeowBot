@@ -4,7 +4,7 @@ from typing import Dict, List
 
 import pss_data as _pas_data
 from utils import type as _type
-
+from utils import time as _time
 
 def raw_xml_to_dict(raw_xml: str, include_root: bool = True, fix_attributes: bool = True, preserve_lists: bool = False) -> _type._EntityDict:
     root = _ElementTree.fromstring(raw_xml)
@@ -112,4 +112,28 @@ def __get_child_tag_count(root: _ElementTree.Element) -> Dict[str, int]:
     for child_tag in child_tags:
         result[child_tag] = sum(1 for child_node in root if child_node.tag == child_tag)
 
+    return result
+
+def formatted_datetime(date_time: str, include_time: bool = True, include_tz: bool = True, include_tz_brackets: bool = True) -> _time.datetime:
+    format_string = '%Y-%m-%d'
+    if include_time:
+        format_string += ' %H:%M:%S'
+    if include_tz:
+        if include_tz_brackets:
+            format_string += ' (%Z)'
+        else:
+            format_string += ' %Z'
+    result = _time.datetime.strptime(date_time, format_string)
+    if result.tzinfo is None:
+        result = result.replace(tzinfo=_time._timezone.utc)
+    return result
+
+def pss_datetime(pss_datetime: str) -> _time.datetime:
+    result = None
+    if pss_datetime:
+        try:
+            result = _time.datetime.strptime(pss_datetime, _type.API_DATETIME_FORMAT_ISO)
+        except ValueError:
+            result = _time.datetime.strptime(pss_datetime, _type.API_DATETIME_FORMAT_ISO_DETAILED)
+        result = _time._pytz.utc.localize(result)
     return result
