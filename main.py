@@ -269,6 +269,7 @@ async def getUserInfo( aCtx: Context ):
     sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )) )
     if sisAuthorized is not True:
         await aCtx.send("현재는 냥냥봇 채널에서만 이용 가능합니다.")
+        return
     
     sOutputEmbed = await getUserInfoByFunction( aCtx, 
                                                 f'유저(함대) / 트로피 / 접속 / 보호막',  
@@ -338,6 +339,7 @@ async def getUserAliveInfo_top( aCtx: context ):
     sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
     if sisAuthorized is not True:
         await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
+        return
     
     async with aCtx.typing():
         try:
@@ -376,7 +378,7 @@ async def initBot():
         
         print( 'init Bot Success' )
     except Exception as sEx:
-        print( 'init Bot Failure : ' + sEx )
+        print( 'init Bot Failure : ' + str(sEx) )
         sys.exit()
 
     sKey = await _func.get_access_key()
