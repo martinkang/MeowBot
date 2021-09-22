@@ -27,9 +27,8 @@ def getUserFromTourneyData( aYear: int, aMonth: int, aUserID: int ):
     return
      
 
-def getToureyRawData( aYear: int, aMonth: int ):
+def getToureyRawData( aYear: int, aMonth: int ) -> TourneyData:
     sRawData: TourneyData = gTourneyDataClient.get_data( year = aYear, 
                                                          month = aMonth,
                                                          initializing=True )
-
     return sRawData

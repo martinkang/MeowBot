@@ -3,6 +3,9 @@ from typing import Dict, List, Tuple, Optional
 
 # ---------- Constants ----------
 
+FLEET_KEY_NAME: str = 'AllianceId'
+FLEET_DESCRIPTION_PROPERTY_NAME: str = 'AllianceName'
+
 FLEET_DESCRIPTION_PROPERTY_NAME: str = 'AllianceName'
 FLEET_KEY_NAME: str = 'AllianceId'
 FLEET_SHEET_COLUMN_NAMES: Dict[str, Optional[str]] = {

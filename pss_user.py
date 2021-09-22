@@ -18,8 +18,10 @@ from discord.ext.commands import Context, context
 from discord.utils import escape_markdown
 from discord import Colour, Embed, Message
 
-FLEET_KEY_NAME: str = 'AllianceId'
-FLEET_DESCRIPTION_PROPERTY_NAME: str = 'AllianceName'
+USER_DESCRIPTION_PROPERTY_NAME = 'Name'
+USER_KEY_NAME = 'Id'
+
+
 
 # SET ID, SET, USER ID, NICK, FLEET, TROPHY
 

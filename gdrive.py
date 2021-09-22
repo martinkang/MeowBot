@@ -362,7 +362,7 @@ class TourneyData(object):
         hours, minutes = divmod(minutes, 60)
         days, hours = divmod(hours, 24)
         td = timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds)
-        dt = _time.PSS_START_DATETIME + td
+        dt = str(_time.PSS_START_DATETIME + td)
         result = _parse.pss_datetime(dt)
         return result
 

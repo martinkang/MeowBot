@@ -21,8 +21,7 @@ LEAGUE_INFO_DESCRIPTION_PROPERTY_NAME = 'LeagueName'
 LEAGUE_INFO_KEY_NAME = 'LeagueId'
 LEAGUE_INFOS_CACHE = []
 SEARCH_USERS_BASE_PATH = f'UserService/SearchUsers?searchString='
-USER_DESCRIPTION_PROPERTY_NAME = 'Name'
-USER_KEY_NAME = 'Id'
+
 
 _safe_quoters = {}
 
