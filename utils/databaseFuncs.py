@@ -23,6 +23,7 @@ def _create_schema() -> bool:
         ('Access_Key', 'TEXT(50)', False, True),
         ('Login_Date', 'TEXT(50)', False, True)
     ]
+    
     gColumn_Definitions_Settings = [
         ('setting_version', 'int', True, True),
         ('modifydate', 'DATETIME', False, True),
@@ -32,6 +33,38 @@ def _create_schema() -> bool:
         ('settingtext', 'TEXT', False, False),
         ('setting_date', 'DATETIME', False, True)
     ]
+    
+    gColumn_Definitions_TOURNEY_USER_LIST = [
+        ('User_ID', 'INT', True, True),
+        ('Tourney_Date', 'DATETIME', True, True),
+        ('User_Nick', 'TEXT(20)', False, True),
+        ('Star_Score', 'INT', False, False),
+        ('Fleet_ID', 'INT)', False, True),
+        ('Fleet_Join_Date', 'DATETIME', False, False),
+        ('Fleet_Membership', 'INT', False, False),
+        ('Trophy', 'INT', False, True),
+        ('Attack_Win', 'Int', False, False),
+        ('Attack_Lose', 'Int', False, False),
+        ('Attack_Draw', 'Int', False, False),
+        ('Defence_Win', 'Int', False, False),
+        ('Defence_Lose', 'Int', False, False),
+        ('Defence_Draw', 'Int', False, False),
+        ("Crew_Donated", 'INT', False, False),
+        ("Crew_Received", 'INT', False, False),
+        ("'Championship_Score': ", 'INT', False, False)
+    ]
+    
+    gColumn_Definitions_TOURNEY_FLEET_LIST = [
+        ('Fleet_ID', 'INT)', True, True),
+        ('Tourney_Date', 'DATETIME', True, True),
+        ('Fleet_Name', 'TEXT(20)', False, True),
+        ('Star_Score', 'INT', False, False),
+        ('Trophy', 'INT', False, True),
+        ('Tourney_Division', 'TEXT(2)', False, True),
+        ('Number_Members', 'INT', False, True),
+        ("'Championship_Score': ", 'INT', False, False)        
+    ]
+    
     gColumn_Definitions_USER_LIST = [
         ('User_ID', 'INT', True, True),
         ('User_Nick', 'TEXT(20)', False, True),

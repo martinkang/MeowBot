@@ -361,9 +361,9 @@ async def initBot():
         print( 'Internal Function initilaize Success' )
         await db._init()
         print( 'Database initilaize Success' )
-        # T = pss_tournament.getToureyRawData(2021,7)
-        # print("get Tourney data success")
-
+        #T = pss_tournament.getToureyRawData(2021,7)
+        #print("get Tourney data success")
+        #print(T.get_user_data_by_id("ID"))
         print( 'init Bot Success' )
     except Exception as sEx:
         print( 'init Bot Failure : ' + str(sEx) )
