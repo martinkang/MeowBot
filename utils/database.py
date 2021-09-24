@@ -12,6 +12,7 @@ from . import functions as _func
 from . import databaseFuncs as _dbFunc
 from . import settings as _set
 from . import time as _time
+from . import type as _type
 # from . import format as _format
 from typing import Any, Callable, Dict, List, Tuple, Union
 
@@ -92,14 +93,25 @@ async def _initPool():
 async def connect():
     sConnect = True
     
+    print("connect")
     sPool = await gConnectPool.acquire()
+    print(sPool)
     if sPool is None:
         sConnect = await _initPool()
         sPool = await gConnectPool.acquire()
             
     return sConnect, sPool
 
-
+async def try_add_primary_key( aTableName: str,  aCols: List[str]) -> bool:
+    sCols = ', '.join(aCols) 
+    sSql = f'ALTER TABLE {aTableName} ADD PRIMARY KEY ( {sCols} );'
+    sSuccess = await try_Execute( sSql )
+    
+    _func.debug_log( "try_add_primary_key", sSql )
+    
+    return sSuccess
+    
+    
 async def try_Create_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.ColumnDefinition]) -> bool:
     _func.debug_log( "try_Create_Table", aTableName )
 
@@ -107,14 +119,15 @@ async def try_Create_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.Co
     sSql = f'CREATE TABLE IF NOT EXISTS {aTableName} ( {sCols} );'
     sSuccess = await try_Execute( sSql )
     return sSuccess
-        
+
         
 async def try_Execute( aSql : str ) -> bool:
     _func.debug_log( "try_Execute", aSql )
     
     sSuccess = True
-    
+    print("before connect")
     sIsConneted, sPool = await connect()
+    print("after connect " + str(sIsConneted))
     if sIsConneted:
         async with sPool.cursor() as sCur:
             try:
@@ -147,8 +160,60 @@ async def updateAccessKeyData( aKey:str, aLoginDate:datetime ):
     return sSuccess
 
 
-# async def insertUserInfo( aSet:str, aRank:int, aUserInfo: _func.EntityInfo ):
-#     _func.debug_log( "insertUserInfo", "Rank : " + aRank + " Name : " + aUserInfo['Name'] )
+def getEntityData( aEntityData: _type.EntityInfo, aCol: str, aType: int ):      
+    sResult = None
+    
+    if aCol in aEntityData:
+        sResult = aEntityData[aCol]
+    else:
+        if aType == _type.INT_TYPE:
+            sResult = 0
+        elif aType == _type.STR_TYPE:
+            sResult = ''
+        elif aType == _type.DATE_TYPE:
+            sResult = _time.datetime(year=1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
+        else:
+            sResult = None
+            
+    return sResult  
+
+
+async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: int ):
+    sUserID            = aUser['AllianceId']
+    sTourneyDate       = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
+    sUserName          = getEntityData( aUser, 'Name', _type.STR_TYPE )
+    sStarScore         = getEntityData( aUser, 'AllianceScore', _type.INT_TYPE )
+    sFleetID           = getEntityData( aUser, 'AllianceId', _type.INT_TYPE )
+    sFleetJoinDate     = getEntityData( aUser, 'AllianceJoinDate', _type.DATE_TYPE )
+    sFleetMembership   = getEntityData( aUser, 'AllianceMembership', _type.STR_TYPE )
+    sTrophy            = getEntityData( aUser, 'Trophy', _type.INT_TYPE )
+    sAtkWin            = getEntityData( aUser, 'PVPAttackWins', _type.INT_TYPE )
+    sAtkLose           = getEntityData( aUser, 'PVPAttackLosses', _type.INT_TYPE )
+    sAtkDraw           = getEntityData( aUser, 'PVPAttackDraws', _type.INT_TYPE )
+    sDefWin            = getEntityData( aUser, 'PVPDefenceWins', _type.INT_TYPE )
+    sDefLose           = getEntityData( aUser, 'PVPDefenceLosses', _type.INT_TYPE )
+    sDefDraw           = getEntityData( aUser, 'PVPDefenceDraws', _type.INT_TYPE )
+    sCrewDonated       = getEntityData( aUser, 'CrewDonated', _type.INT_TYPE )
+    sCrewReceived      = getEntityData( aUser, 'CrewReceived', _type.INT_TYPE )
+    sChampionshipScore = getEntityData( aUser, 'ChampionshipScore', _type.INT_TYPE )
+    
+    sSql = f"INSERT INTO PSS_TOURNEY_USER_TABLE( user_id, tourney_date, user_nick, star_score, \
+    fleet_id, fleet_join_date, fleet_membership, trophy, \
+    attack_win, attack_lose, attack_draw, \
+    defence_win, defence_lose, defence_draw, \
+    crew_donated, crew_received, championship_score ) \
+    value( {sUserID}, '{sTourneyDate}', '{sUserName}', {sStarScore}, \
+        {sFleetID}, '{sFleetJoinDate}', '{sFleetMembership}', {sTrophy}, \
+            {sAtkWin}, {sAtkLose}, {sAtkDraw}, \
+                {sDefWin}, {sDefLose}, {sDefDraw}, \
+                    {sCrewDonated}, {sCrewReceived}, {sChampionshipScore} )"
+    _func.debug_log("insertTourneyUserInfo", sSql) 
+                  
+    sSuccess = await try_Execute( sSql )
+    return sSuccess
+
+# async def insertTourneyUserInfo( aUserInfo: _func.EntityInfo ):
+#     _func.debug_log( "insertTourneyUserInfo",  aUserInfo['Name'] )
 #     sUserID = aUserInfo['Id']
 #     sUserName = aUserInfo['Name']
 #     # sFleet, _ = _format._get_FleetNClass( aUserInfo )
@@ -185,12 +250,12 @@ async def updateData( aTableName:str,  aDatas:_dbFunc.ColumnData ):
     return
     
     
-async def deleteData( aTableName:str):
+async def deleteData( aTableName:str ):
     _func.debug_log( "deleteData", aTableName )
     return
 
 
-async def select_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.ColumnDefinition] = None):
+async def select_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.ColumnDefinition] = None ):
     _func.debug_log( "select_Table", aTableName )
     
     sCols = None
@@ -217,6 +282,31 @@ async def select_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.Column
         print( "select_Table connect error" )
         sSuccess = False
         
-    return sSuccess, sResult
+    return sSuccess, sResult       
 
                 
+async def desc_Table( aTableName: str ):
+    _func.debug_log( "desc_Table", aTableName )
+    
+    sSql = f'DESC {aTableName}';
+    
+    sIsConneted, sPool = await connect()
+    sSuccess = False      
+    sResult = []
+    
+    if sIsConneted:
+        async with sPool.cursor() as sCur:
+            try:
+                await sCur.execute( sSql )
+                sResult = await sCur.fetchall()
+
+                _func.debug_log( "desc_Table", sSql + " is Success" )
+            except Exception as sEx:
+                print( sEx )   
+            sSuccess = True         
+    else:
+        print( "desc_Table connect error" )
+        sSuccess = False
+    
+        
+    return sSuccess, sResult

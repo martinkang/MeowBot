@@ -28,7 +28,7 @@ USER_KEY_NAME = 'Id'
 async def _getUserInfoByFunction( aCtx:context, 
                                 aExactName: str, 
                                 aNow:datetime,
-                                aUserInfos: List[_func.EntityInfo], 
+                                aUserInfos: List[_type.EntityInfo], 
                                 aIsNeedShipInfo:bool, 
                                 aSelectFunc, 
                                 aFormatFunc ):
@@ -56,7 +56,7 @@ async def _getUserInfoByFunction( aCtx:context,
     return sErrMsg, sInfosTxt
         
 
-async def get_Selected_User_Alive_Info( aCtx: Context, aNow:datetime,  aUserIDSet: Dict, aUserInfos: List[_func.EntityInfo] ):
+async def get_Selected_User_Alive_Info( aCtx: Context, aNow:datetime,  aUserIDSet: Dict, aUserInfos: List[_type.EntityInfo] ):
     def check(m): 
         return m.author == aCtx.message.author and m.channel == aCtx.message.channel 
 
@@ -78,7 +78,7 @@ async def get_Selected_User_Alive_Info( aCtx: Context, aNow:datetime,  aUserIDSe
     return sErrMsg, sInfosTxt
                     
                 
-def get_User_Alive_Infos( _: Context, aUserInfos: List[_func.EntityInfo] ):
+def get_User_Alive_Infos( _: Context, aUserInfos: List[_type.EntityInfo] ):
     sALiveInfos = {}
     sInfosTxt = ''
     sNo = 0
@@ -93,19 +93,19 @@ def get_User_Alive_Infos( _: Context, aUserInfos: List[_func.EntityInfo] ):
     return sALiveInfos, sInfosTxt
 
 
-async def get_users_infos_by_name( _: Context, aUserName: str ) -> List[_func.EntityInfo]:
+async def get_users_infos_by_name( _: Context, aUserName: str ) -> List[_type.EntityInfo]:
     user_infos = list( (await __get_users_data( aUserName ) ).values())
     return user_infos
 
 
-async def __get_users_data( aUserName: str) -> _func.EntitiesData:
+async def __get_users_data( aUserName: str) -> _type.EntitiesData:
     sPath = await  _path.__get_users_data_path( aUserName )
     raw_data = await _func.get_data_from_path( sPath )
     user_infos = _parse.__xmltree_to_dict( raw_data, 3 )
     return user_infos
 
 
-async def get_Selected_User_N_Ship_Info( aCtx: Context, aNow:datetime, aUserIDSet: Dict, aUserInfos: List[_func.EntityInfo] ):
+async def get_Selected_User_N_Ship_Info( aCtx: Context, aNow:datetime, aUserIDSet: Dict, aUserInfos: List[_type.EntityInfo] ):
     def check(m): 
         return m.author == aCtx.message.author and m.channel == aCtx.message.channel 
 
@@ -133,7 +133,7 @@ async def get_Selected_User_N_Ship_Info( aCtx: Context, aNow:datetime, aUserIDSe
     return sErrMsg, sInfosTxt
 
 
-async def _get_top_captains_For_UserInfos( aSkip: int, aTake: int) -> List[_func.EntityInfo]:
+async def _get_top_captains_For_UserInfos( aSkip: int, aTake: int) -> List[_type.EntityInfo]:
     sStart = aSkip + 1
     sRawData = await _get_top_captains_data( aSkip, aTake )
 
@@ -178,7 +178,7 @@ def __prepare_top_captains( users_data: _type.EntitiesData, aStart: int, aTake: 
 
 
 
-def _prepare_Top_Captains_For_UserInfo( aUsersData: _type.EntitiesData, aStart: int, aTake: int ) -> List[_func.EntityInfo]:
+def _prepare_Top_Captains_For_UserInfo( aUsersData: _type.EntitiesData, aStart: int, aTake: int ) -> List[_type.EntityInfo]:
     sStart = aStart
     sEnd = ( sStart - 1 ) + aTake
     sRank = sStart

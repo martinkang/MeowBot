@@ -1,9 +1,15 @@
-from gdrive import TourneyData
 import sys
 from asyncio.tasks import sleep
 from datetime import date, datetime
 from typing import Dict, List, Tuple
 
+
+# --------------- Utils ---------------
+from utils import functions as _func
+from utils import database as db
+from utils import path as _path
+from utils import discord as _discord
+from utils import format as _format
 
 # --------------- Schedule --------------- 
 import schedule
@@ -25,11 +31,6 @@ from discord.ext.commands import Context, context
 from utils import time as _time
 
 
-from utils import database as db
-from utils import functions as _func
-from utils import path as _path
-from utils import discord as _discord
-from utils import format as _format
 
 import pss_tournament
 
@@ -361,9 +362,9 @@ async def initBot():
         print( 'Internal Function initilaize Success' )
         await db._init()
         print( 'Database initilaize Success' )
-        #T = pss_tournament.getToureyRawData(2021,7)
-        #print("get Tourney data success")
-        #print(T.get_user_data_by_id("ID"))
+        await pss_tournament.initTourneyDB()
+        print( 'Tournament Data initilaize Success' )
+
         print( 'init Bot Success' )
     except Exception as sEx:
         print( 'init Bot Failure : ' + str(sEx) )

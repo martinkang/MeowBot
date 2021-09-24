@@ -4,12 +4,13 @@ import sys
 import os
 from utils.settings import TOURNAMENT_DATA_START_DATE
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+from . import type as _type
 from . import functions as _func
 from . import time as _time
 from . import emojis as _emojis
 
 
-def create_User_Info( aUserInfo: _func.EntityInfo) -> str:
+def create_User_Info( aUserInfo: _type.EntityInfo) -> str:
     print(aUserInfo)
     sID = aUserInfo['Id']
     sName = aUserInfo['Name']
@@ -41,7 +42,7 @@ def create_User_Info( aUserInfo: _func.EntityInfo) -> str:
 
 
 
-def create_User_Alive( aNow: datetime, aUserInfo: _func.EntityInfo, _: _func.EntityInfo  ) -> str:
+def create_User_Alive( aNow: datetime, aUserInfo: _type.EntityInfo, _: _type.EntityInfo  ) -> str:
     sErrMsg = None
     sID = aUserInfo['Id']
     sName = aUserInfo['Name']
@@ -63,7 +64,7 @@ def create_User_Alive( aNow: datetime, aUserInfo: _func.EntityInfo, _: _func.Ent
 
 
 
-def create_User_List( aNo: int, aUserInfo: _func.EntityInfo) -> str:
+def create_User_List( aNo: int, aUserInfo: _type.EntityInfo) -> str:
     sName = aUserInfo['Name']
     sTrophy = aUserInfo['Trophy']
     sAliance, _ = _get_FleetNClass( aUserInfo )
@@ -72,7 +73,7 @@ def create_User_List( aNo: int, aUserInfo: _func.EntityInfo) -> str:
 
 
 
-def _get_LastHeartBeat( aNow:datetime, aUserInfo: _func.EntityInfo ) ->datetime:
+def _get_LastHeartBeat( aNow:datetime, aUserInfo: _type.EntityInfo ) ->datetime:
     sLastBeat = ""
     sLastLogin = _time.get_TimeAsTimeZone( aUserInfo['LastLoginDate'] )
     sLastHeartBeat = _time.get_TimeAsTimeZone( aUserInfo['LastHeartBeatDate'] )
@@ -86,7 +87,7 @@ def _get_LastHeartBeat( aNow:datetime, aUserInfo: _func.EntityInfo ) ->datetime:
 
 
 
-def create_User_Immunity( aNow:datetime, aUserInfo: _func.EntityInfo, aShipInfo: _func.EntityInfo ) -> str:
+def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo: _type.EntityInfo ) -> str:
     sName = aUserInfo['Name']
     
     _func.debug_log("create_User_Immunity", f'Name : {sName}')
@@ -135,7 +136,7 @@ def create_User_Immunity( aNow:datetime, aUserInfo: _func.EntityInfo, aShipInfo:
     return sErrMsg, sInfosTxt
 
 
-def _get_Immunity( aNow:datetime, aInfo: _func.EntityInfo ) ->datetime:
+def _get_Immunity( aNow:datetime, aInfo: _type.EntityInfo ) ->datetime:
     sTime = ""
     sErrMsg = None
     
@@ -168,7 +169,7 @@ def getTimeFormat( aTime: datetime )->str:
     return sResult
     
     
-def _get_FleetNClass( aUserInfo: _func.EntityInfo ):
+def _get_FleetNClass( aUserInfo: _type.EntityInfo ):
     sAliance = ""
     sClass = ""
     if 'AllianceName' in aUserInfo:

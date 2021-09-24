@@ -7,6 +7,8 @@ import pss_data as _pss_data
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
+
+from . import type as _type
 from . import functions as _func
 from . import parse as _parse
 
@@ -34,11 +36,11 @@ def url_escape(s: str) -> str:
     return s
 
 
-def xmltree_to_dict2(raw_text: str) -> _func.EntitiesData:
+def xmltree_to_dict2(raw_text: str) ->  _type.EntitiesData:
     return __xmltree_to_dict(raw_text, 2)
 
 
-def xmltree_to_dict3(raw_text: str) -> _func.EntitiesData:
+def xmltree_to_dict3(raw_text: str) ->  _type.EntitiesData:
     return __xmltree_to_dict(raw_text, 3)
 
 
@@ -137,7 +139,7 @@ def __get_child_tag_count(root: _ElementTree.Element) -> Dict[str, int]:
     return result
 
 
-def __xmltree_to_dict(raw_text: str, depth: int) -> _func.EntitiesData:
+def __xmltree_to_dict(raw_text: str, depth: int) ->  _type.EntitiesData:
     result = raw_xml_to_dict(raw_text)
     while depth > 0:
         found_new_root = False

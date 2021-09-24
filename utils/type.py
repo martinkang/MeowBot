@@ -11,6 +11,10 @@ API_DATETIME_FORMAT_ISO: str = '%Y-%m-%d %H:%M:%S'
 API_DATETIME_FORMAT_ISO_DETAILED: str = '%Y-%m-%d %H:%M:%S.%f'
 API_DATETIME_FORMAT_CUSTOM: str = '%d.%m.%y %H:%M'
 
+INT_TYPE:int = 0
+STR_TYPE:int = 1
+DATE_TYPE:int = 2
+
 EntityInfo = Dict[str, 'EntityInfo']
 EntitiesData = Dict[str, EntityInfo]
 _EntityDict = Union[List['_EntityDict'], Dict[str, '_EntityDict']]

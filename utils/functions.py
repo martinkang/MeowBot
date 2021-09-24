@@ -23,11 +23,6 @@ API_SERVER: str = "api2.pixelstarships.com"
 DEFAULT_PRODUCTION_SERVER: str = 'api2.pixelstarships.com'
 
 
-EntityInfo = Dict[str, 'EntityInfo']
-EntitiesData = Dict[str, EntityInfo]
-_EntityDict = Union[List['_EntityDict'], Dict[str, '_EntityDict']]
-
-
 def init():
     global gAccessKey
     

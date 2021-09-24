@@ -18,6 +18,8 @@ def _create_schema() -> bool:
     global gColumn_Definitions_Daily
     global gColumn_Definitions_PSS_ACCESS_KEY
     global gColumn_Definitions_USER_LIST
+    global gColumn_Definitions_TOURNEY_USER_LIST
+    global gColumn_Definitions_TOURNEY_FLEET_LIST
     
     gColumn_Definitions_PSS_ACCESS_KEY = [
         ('Access_Key', 'TEXT(50)', False, True),
@@ -35,36 +37,36 @@ def _create_schema() -> bool:
     ]
     
     gColumn_Definitions_TOURNEY_USER_LIST = [
-        ('User_ID', 'INT', True, True),
-        ('Tourney_Date', 'DATETIME', True, True),
+        ('User_ID', 'INT', False, True),
+        ('Tourney_Date', 'DATETIME', False, True),
         ('User_Nick', 'TEXT(20)', False, True),
         ('Star_Score', 'INT', False, False),
-        ('Fleet_ID', 'INT)', False, True),
+        ('Fleet_ID', 'INT', False, True),
         ('Fleet_Join_Date', 'DATETIME', False, False),
-        ('Fleet_Membership', 'INT', False, False),
+        ('Fleet_Membership', 'TEXT(20)', False, False),
         ('Trophy', 'INT', False, True),
-        ('Attack_Win', 'Int', False, False),
-        ('Attack_Lose', 'Int', False, False),
-        ('Attack_Draw', 'Int', False, False),
-        ('Defence_Win', 'Int', False, False),
-        ('Defence_Lose', 'Int', False, False),
-        ('Defence_Draw', 'Int', False, False),
-        ("Crew_Donated", 'INT', False, False),
-        ("Crew_Received", 'INT', False, False),
-        ("'Championship_Score': ", 'INT', False, False)
+        ('Attack_Win', 'INT', False, False),
+        ('Attack_Lose', 'INT', False, False),
+        ('Attack_Draw', 'INT', False, False),
+        ('Defence_Win', 'INT', False, False),
+        ('Defence_Lose', 'INT', False, False),
+        ('Defence_Draw', 'INT', False, False),
+        ('Crew_Donated', 'INT', False, False),
+        ('Crew_Received', 'INT', False, False),
+        ('Championship_Score', 'INT', False, False)
     ]
     
     gColumn_Definitions_TOURNEY_FLEET_LIST = [
-        ('Fleet_ID', 'INT)', True, True),
-        ('Tourney_Date', 'DATETIME', True, True),
+        ('Fleet_ID', 'INT', False, True),
+        ('Tourney_Date', 'DATETIME', False, True),
         ('Fleet_Name', 'TEXT(20)', False, True),
         ('Star_Score', 'INT', False, False),
         ('Trophy', 'INT', False, True),
         ('Tourney_Division', 'TEXT(2)', False, True),
         ('Number_Members', 'INT', False, True),
-        ("'Championship_Score': ", 'INT', False, False)        
+        ('Championship_Score', 'INT', False, False)        
     ]
-    
+         
     gColumn_Definitions_USER_LIST = [
         ('User_ID', 'INT', True, True),
         ('User_Nick', 'TEXT(20)', False, True),
@@ -85,7 +87,8 @@ def _create_schema() -> bool:
 
 async def _initSchema():
     await _initAccessKey()
-    await _initUserList()
+    await _initTourneyData()
+    #await _initUserList()
     
     
 async def _initAccessKey():
@@ -101,7 +104,34 @@ async def _initAccessKey():
     
     _func.debug_log( "_initAccessKey", f'Success : {sSuccess}' )
 
-            
+  
+async def _initTourneyData():
+    _func.debug_log( "PSS_TOURNEY_USER_TABLE" )
+    sSuccess = await db.try_Create_Table( "PSS_TOURNEY_USER_TABLE", gColumn_Definitions_TOURNEY_USER_LIST )
+    if sSuccess:
+        sSuccess, sResultList = await db.select_Table( "PSS_TOURNEY_USER_TABLE" )
+        print( sResultList )
+        
+        await db.try_add_primary_key( "PSS_TOURNEY_USER_TABLE", ['User_ID', 'Tourney_Date'] )
+        sSuccess, sResultList = await db.desc_Table( "PSS_TOURNEY_USER_TABLE" )
+        print( sResultList )
+        
+    _func.debug_log( "PSS_TOURNEY_USER_TABLE", f'Success : {sSuccess}' )
+    
+    sSuccess = await db.try_Create_Table( "PSS_TOURNEY_FLEET_TABLE", gColumn_Definitions_TOURNEY_FLEET_LIST )
+    if sSuccess:
+        sSuccess, sResultList = await db.select_Table( "PSS_TOURNEY_FLEET_TABLE" )
+        print( sResultList )
+        
+        await db.try_add_primary_key( "PSS_TOURNEY_FLEET_TABLE", ['Fleet_ID', 'Tourney_Date'] )
+        sSuccess, sResultList = await db.desc_Table( "PSS_TOURNEY_FLEET_TABLE" )
+        
+        print( sResultList )
+        
+    _func.debug_log( "PSS_TOURNEY_FLEET_TABLE", f'Success : {sSuccess}' )
+    
+    
+              
 async def _initUserList():
     await db.try_Create_Table( "USER_LIST", gColumn_Definitions_USER_LIST )
     sSuccess, _ = await db.select_Table( "USER_LIST" )
