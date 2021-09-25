@@ -13,6 +13,7 @@ from . import time as _time
 from . import type as _type
 
 from typing import List
+import pss_lookups as lookups
 
 
 PSS_API_KEY_VERSION = 1
@@ -140,7 +141,7 @@ async def try_Create_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.Co
     return sSuccess
 
         
-async def try_Execute_once( aSql : str ) -> bool:
+async def try_Execute_once( aSql : str, aData = None ) -> bool:
     _func.debug_log( "try_Execute", aSql )
     
     sSuccess = True
@@ -148,7 +149,7 @@ async def try_Execute_once( aSql : str ) -> bool:
     if sIsConneted:
         async with sPool.cursor() as sCur:
             try:
-                await sCur.execute( aSql )
+                await sCur.execute( aSql, aData )
                 sResult = await sCur.fetchall()
                 _func.debug_log( "try_Execute", aSql + " is Success" )
                 sSuccess = True
@@ -211,6 +212,26 @@ def getEntityData( aEntityData: _type.EntityInfo, aCol: str, aType: int ):
     return sResult  
 
 
+async def checkTourneyDataSaved( aTableName: str, aYear:int, aMonth: int ) -> bool:
+    sTourneyDate = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc) 
+    return
+
+async def insertLastSavedTourneyData( aTableName: str, aYear:int, aMonth:int, aNumUsers: int ):
+    sTourneyDate = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
+    sData = ( aTableName, sTourneyDate, aNumUsers ) 
+    sSql = """INSERT INTO %s values( %s, %s )"""
+    
+    sSuccess = await try_Execute_once( sSql, sData )
+    if sSuccess != True:
+        print( "insertLastSavedTourneyData Fail : " + sSql )
+        
+    return sSuccess
+
+
+async def checkAlreadyInTourneyData( aYear: int, aMonth: int ):
+    return False
+
+
 async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: int ):
     sUserID            = aUser['Id']
     sTourneyDate       = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
@@ -229,67 +250,78 @@ async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: in
     sCrewDonated       = getEntityData( aUser, 'CrewDonated', _type.INT_TYPE )
     sCrewReceived      = getEntityData( aUser, 'CrewReceived', _type.INT_TYPE )
     sChampionshipScore = getEntityData( aUser, 'ChampionshipScore', _type.INT_TYPE )
-    
-    sSql = f"INSERT INTO PSS_TOURNEY_USER_TABLE( user_id, tourney_date, user_nick, star_score, \
-    fleet_id, fleet_join_date, fleet_membership, trophy, \
-    attack_win, attack_lose, attack_draw, \
-    defence_win, defence_lose, defence_draw, \
-    crew_donated, crew_received, championship_score ) \
-    value( {sUserID}, '{sTourneyDate}', '{sUserName}', {sStarScore}, \
-        {sFleetID}, '{sFleetJoinDate}', '{sFleetMembership}', {sTrophy}, \
-            {sAtkWin}, {sAtkLose}, {sAtkDraw}, \
-                {sDefWin}, {sDefLose}, {sDefDraw}, \
-                    {sCrewDonated}, {sCrewReceived}, {sChampionshipScore} )"
- 
-                  
-    sSuccess = await try_Execute_once( sSql )
+     
+    sData = ( sUserID, sTourneyDate, sUserName, sStarScore, 
+              sFleetID,  sFleetJoinDate, sFleetMembership, sTrophy,
+              sAtkWin, sAtkLose, sAtkDraw,
+              sDefWin, sDefLose, sDefDraw, 
+              sCrewDonated, sCrewReceived, sChampionshipScore )
+    sSql = """
+    INSERT INTO PSS_TOURNEY_USER_TABLE( user_id, tourney_date, user_nick, star_score, 
+    fleet_id, fleet_join_date, fleet_membership, trophy, 
+    attack_win, attack_lose, attack_draw, 
+    defence_win, defence_lose, defence_draw, 
+    crew_donated, crew_received, championship_score ) 
+    value( %s, %s, %s, %s,         
+    %s, %s, %s, %s, 
+    %s, %s, %s,
+    %s, %s, %s,
+    %s, %s, %s )""" 
+                            
+    sSuccess = await try_Execute_once( sSql, sData )
     if sSuccess != True:
         print( "insertTourneyUserInfo Fail : " + sSql )
     return sSuccess
 
-# async def insertTourneyUserInfo( aUserInfo: _func.EntityInfo ):
-#     _func.debug_log( "insertTourneyUserInfo",  aUserInfo['Name'] )
-#     sUserID = aUserInfo['Id']
-#     sUserName = aUserInfo['Name']
-#     # sFleet, _ = _format._get_FleetNClass( aUserInfo )
-#     sTrophy = aUserInfo['Trophy']
+async def insertTourneyFleetInfo( aFleet: _type.EntityInfo, aYear: int, aMonth: int ):
+    sFleetID           = aFleet['AllianceId']
+    sTourneyDate       = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
+    sFleetName         = getEntityData( aFleet, 'AllianceName', _type.STR_TYPE )
+    sStarScore         = getEntityData( aFleet, 'Score', _type.INT_TYPE )
+    sDivision          = getEntityData( aFleet, 'DivisionDesignId', _type.INT_TYPE )
+    sTrophy            = getEntityData( aFleet, 'Trophy', _type.INT_TYPE )
+    sNumOfMembers      = getEntityData( aFleet, 'NumberOfMembers', _type.INT_TYPE )
+    sChampionshipScore = getEntityData( aFleet, 'ChampionshipScore', _type.INT_TYPE )
+     
+    sData = ( sFleetID, sTourneyDate, sFleetName, sStarScore, 
+              sTrophy, lookups.DIVISION_DESIGN_ID_TO_CHAR[str(sDivision)], sNumOfMembers, sChampionshipScore )
+    sSql = """
+    INSERT INTO PSS_TOURNEY_FLEET_TABLE( Fleet_ID, Tourney_Date, Fleet_Name, Star_Score, 
+    Trophy, Tourney_Division, Number_Members, Championship_Score )
+    value( %s, %s, %s, %s,         
+    %s, %s, %s, %s )""" 
+             
+    sSuccess = await try_Execute_once( sSql, sData )
+    if sSuccess != True:
+        print( "insertTourneyFleetInfo Fail : " + sSql )
+    return sSuccess
+
+
+async def select_Table_Count( aTableName: str ):
+    _func.debug_log( "select_Table_Count", aTableName )
     
-#     sPvpAtkWin = aUserInfo['PVPAttackWins']
-#     sPvpAtkLose = aUserInfo['PVPAttackLosses'] 
-#     sPvpAtkDraw = aUserInfo['PVPAttackDraws'] 
-#     sPvpDfcWin = aUserInfo['PVPDefenceWins'] 
-#     sPvpDfcLose = aUserInfo['PVPDefenceLosses'] 
-#     sPvpDfcDraw = aUserInfo['PVPDefenceDraws'] 
-#     # sLastLogin = str( (_time.get_TimeAsTimeZone( aUserInfo['LastLoginDate'] )).strftime(_time.DATABASE_DATETIME_FORMAT) )
-#     # sLastHeartbeat = str( _time.get_TimeAsTimeZone( aUserInfo['LastHeartBeatDate'] )).strftime(_time.DATABASE_DATETIME_FORMAT) )
-#     # sImmunity = str( _time.get_TimeAsTimeZone( aUserInfo['ImmunityDate'] )).strftime(_time.DATABASE_DATETIME_FORMAT) )
+    sSql = f'SELECT count(*) FROM {aTableName};'
     
-#     # sSql = "INSERT INTO USER_LIST( User_ID, User_Nick, Set_Name, Fleet, Rank, Trophy, " \
-#     #     + "Attack_Win, Attack_Lose, Attack_Draw, Defence_Win, Defence_Lose, Defence_Draw, " \
-#     #     + "Last_Login_Date, Last_Heartbeat_Date, Immunity_Date  ) " \
-#     #     + f'VALUES( {sUserID}, {sUserName}, {aSet}, {sFleet}, {aRank}, {sTrophy}, ' \
-#     #     + f'{sPvpAtkWin}, {sPvpAtkLose}, {sPvpAtkDraw}, {sPvpDfcWin}, {sPvpDfcLose}, {sPvpDfcDraw} ' \
-#     #     + f'{sLastLogin}, {sLastHeartbeat}, {sImmunity} )'
-#     # _func.debug_log( "insertUserInfo", f'sql : {sSql}' )    
-#     # sSuccess = await try_Execute( sSql )
-#     return sSuccess
+    sIsConneted, sPool = await connect()
+    
+    sResult = []
+    if sIsConneted:
+        async with sPool.cursor() as sCur:
+            try:
+                await sCur.execute( sSql )
+                sResult = await sCur.fetchall()
+            except Exception as sEx:
+                print( "select_Table_Count Error : " + str(sEx) )   
+            sSuccess = True
 
-
-async def insertData( aTableName:str,  aDatas: _dbFunc.ColumnData ):
-    _func.debug_log( "insertData", aTableName )
-    return
-
-
-async def updateData( aTableName:str,  aDatas:_dbFunc.ColumnData ):
-    _func.debug_log( "updateData", aTableName )
-    return
+        gConnectPool.release(sPool)          
+    else:
+        print( "select_Table_Count connect error" )
+        sSuccess = False
+        
+    return sSuccess, sResult       
     
     
-async def deleteData( aTableName:str ):
-    _func.debug_log( "deleteData", aTableName )
-    return
-
-
 async def select_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.ColumnDefinition] = None ):
     _func.debug_log( "select_Table", aTableName )
     

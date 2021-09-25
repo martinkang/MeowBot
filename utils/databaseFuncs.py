@@ -18,8 +18,11 @@ def _create_schema() -> bool:
     global gColumn_Definitions_Daily
     global gColumn_Definitions_PSS_ACCESS_KEY
     global gColumn_Definitions_USER_LIST
+    global gColumn_Definitions_LAST_SAVED_TOURNEY_USERS_DATA
+    global gColumn_Definitions_LAST_SAVED_TOURNEY_FLEETS_DATA
     global gColumn_Definitions_TOURNEY_USER_LIST
     global gColumn_Definitions_TOURNEY_FLEET_LIST
+    
     
     gColumn_Definitions_PSS_ACCESS_KEY = [
         ('Access_Key', 'TEXT(50)', False, True),
@@ -36,6 +39,16 @@ def _create_schema() -> bool:
         ('setting_date', 'DATETIME', False, True)
     ]
     
+    gColumn_Definitions_LAST_SAVED_TOURNEY_USERS_DATA= [
+        ('Tourney_Date', 'DATETIME', True, True),   
+        ('Number_of_Players', 'INT', False, True)    
+    ]
+    
+    gColumn_Definitions_LAST_SAVED_TOURNEY_FLEETS_DATA= [
+        ('Tourney_Date', 'DATETIME', True, True),   
+        ('Number_of_Fleets', 'INT', False, True)    
+    ]
+         
     gColumn_Definitions_TOURNEY_USER_LIST = [
         ('User_ID', 'INT', False, True),
         ('Tourney_Date', 'DATETIME', False, True),
@@ -66,7 +79,7 @@ def _create_schema() -> bool:
         ('Number_Members', 'INT', False, True),
         ('Championship_Score', 'INT', False, False)        
     ]
-         
+    
     gColumn_Definitions_USER_LIST = [
         ('User_ID', 'INT', True, True),
         ('User_Nick', 'TEXT(20)', False, True),
@@ -106,6 +119,12 @@ async def _initAccessKey():
 
   
 async def _initTourneyData():
+    _func.debug_log( "LAST_SAVED_TOURNEY_USER_DATA" )
+    sSuccess = await db.try_Create_Table( "LAST_SAVED_TOURNEY_DATA", gColumn_Definitions_LAST_SAVED_TOURNEY_USERS_DATA )
+    
+    _func.debug_log( "LAST_SAVED_TOURNEY_FLEET_DATA" )
+    sSuccess = await db.try_Create_Table( "LAST_SAVED_TOURNEY_DATA", gColumn_Definitions_LAST_SAVED_TOURNEY_FLEETS_DATA )
+    
     _func.debug_log( "PSS_TOURNEY_USER_TABLE" )
     sSuccess = await db.try_Create_Table( "PSS_TOURNEY_USER_TABLE", gColumn_Definitions_TOURNEY_USER_LIST )
     if sSuccess:
@@ -115,7 +134,6 @@ async def _initTourneyData():
         sSuccess, sResultList = await db.desc_Table( "PSS_TOURNEY_USER_TABLE" )
         
     _func.debug_log( "PSS_TOURNEY_USER_TABLE", f'Success : {sSuccess}' )
-    
     sSuccess = await db.try_Create_Table( "PSS_TOURNEY_FLEET_TABLE", gColumn_Definitions_TOURNEY_FLEET_LIST )
     if sSuccess:
         sSuccess, sResultList = await db.select_Table( "PSS_TOURNEY_FLEET_TABLE" )

@@ -370,7 +370,7 @@ async def initBot():
         print( 'init Bot Failure : ' + str(sEx) )
         sys.exit()
 
-    sKey = await _func.get_access_key()
+    #sKey = await _func.get_access_key()
    
 
 if __name__ == "__main__":
