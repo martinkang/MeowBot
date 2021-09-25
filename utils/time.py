@@ -29,6 +29,8 @@ ONE_WEEK: timedelta = timedelta(days=7)
 PSS_START_DATE: _date = _date(year=2016, month=1, day=6)
 PSS_START_DATETIME: datetime = datetime(year=2016, month=1, day=6)
 
+PSS_TOURNEY_START_DATETIME: datetime = datetime(year=2019, month=10, day=1)
+
 
 # ---------- TIMEOUT-----------
 ACCESS_TOKEN_TIMEOUT: timedelta = timedelta(hours=12)

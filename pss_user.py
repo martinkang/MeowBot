@@ -149,17 +149,15 @@ async def _get_top_captains_For_UserInfos( aSkip: int, aTake: int) -> List[_type
 async def _get_top_captains_data( aSkip: int, aTake: int) -> _type.EntitiesData:
     sAccessToken = await _func.get_access_key()
     sPath = await  _path.__get_top_captains_path( sAccessToken, aSkip + 1, aTake )
-    print(sPath)
+
     raw_data = await _func.get_data_from_path( sPath )
     data = _parse.__xmltree_to_dict( raw_data, 3 )
-    print(data)
     return data
 
 
 def __prepare_top_captains( users_data: _type.EntitiesData, aStart: int, aTake: int ) -> List[Tuple]:
     sStart = aStart
     sEnd = ( sStart - 1 ) + aTake
-    print(users_data)
     result = [
         (
             position,

@@ -39,7 +39,7 @@ async def get_access_key() -> str:
         sAssessKey, sNow = await _get_Access_Key_From_API_Server()
         gAccessKey['Key'] = sAssessKey
         gAccessKey['LastLogin'] = sNow
-        await _db.updateAccessKeyData( gAccessKey['Key'], gAccessKey['LastLogin'] )
+        sSuccess = await _db.updateAccessKeyData( gAccessKey['Key'], gAccessKey['LastLogin'] )
         
     sKey = gAccessKey['Key']
     sDate = gAccessKey['LastLogin']

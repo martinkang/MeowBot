@@ -1,8 +1,6 @@
 from datetime import datetime
-from getpass import getuser
 import aiomysql
 import asyncio
-import pymysql
 import configparser
 
 import sys
@@ -13,8 +11,8 @@ from . import databaseFuncs as _dbFunc
 from . import settings as _set
 from . import time as _time
 from . import type as _type
-# from . import format as _format
-from typing import Any, Callable, Dict, List, Tuple, Union
+
+from typing import List
 
 
 PSS_API_KEY_VERSION = 1
@@ -29,9 +27,13 @@ async def _init():
 
     sInitPoolSuccess = await _initPool()
     if sInitPoolSuccess:
-        print( "init pool success")
+        print( "create pool success")
         _dbFunc._create_schema()
+        print( "create schema success")
         await _dbFunc._initSchema()
+        print( "init schema success")
+
+        print( "init pool success")
     else:
         raise Exception( "init pool failure" )
     
@@ -46,6 +48,8 @@ def _initConf():
     global gMaxPoolSize
     global gAutocommit
     global gLoop
+    global gPoolCount
+    global gCharSet
 
     sSuccess = False
     try:
@@ -59,6 +63,8 @@ def _initConf():
         gDB = gConfig['DATABASE']['DB']
         gMaxPoolSize = gConfig['DATABASE']['MAX_POOL_SIZE']
         gLoop = asyncio.get_event_loop()
+        gCharSet = 'utf8mb4' # 특수문자 입력을 위해서
+        gPoolCount = 0
         sSuccess = True
     except Exception as sEx:
         _func.debug_log( "_initConf", sEx )
@@ -78,7 +84,8 @@ async def _initPool():
                                                    password=gPW, 
                                                    db=gDB, 
                                                    autocommit=gAutocommit,
-                                                   loop=gLoop )
+                                                   loop=gLoop,
+                                                   charset=gCharSet )
 
         print( "initialize pool success")
         sSuccess = True
@@ -92,20 +99,31 @@ async def _initPool():
 
 async def connect():
     sConnect = True
-    
-    print("connect")
+
     sPool = await gConnectPool.acquire()
-    print(sPool)
     if sPool is None:
-        sConnect = await _initPool()
+        await _initPool()
         sPool = await gConnectPool.acquire()
+        if sPool is not None:
+            sConnect = True
+        else:
+            sConnect = False
+  
             
     return sConnect, sPool
+
+def release_Connection( aCur ):
+    gConnectPool.release( aCur )
+
+async def close_Connection():
+    gConnectPool.close()
+    await gConnectPool.wait_closed()
+
 
 async def try_add_primary_key( aTableName: str,  aCols: List[str]) -> bool:
     sCols = ', '.join(aCols) 
     sSql = f'ALTER TABLE {aTableName} ADD PRIMARY KEY ( {sCols} );'
-    sSuccess = await try_Execute( sSql )
+    sSuccess = await try_Execute_once( sSql )
     
     _func.debug_log( "try_add_primary_key", sSql )
     
@@ -117,46 +135,61 @@ async def try_Create_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.Co
 
     sCols = _dbFunc._getColumnListInDefination(aColumnDefinitions)
     sSql = f'CREATE TABLE IF NOT EXISTS {aTableName} ( {sCols} );'
-    sSuccess = await try_Execute( sSql )
+    sSuccess = await try_Execute_once( sSql )
+    
     return sSuccess
 
         
-async def try_Execute( aSql : str ) -> bool:
+async def try_Execute_once( aSql : str ) -> bool:
     _func.debug_log( "try_Execute", aSql )
     
     sSuccess = True
-    print("before connect")
     sIsConneted, sPool = await connect()
-    print("after connect " + str(sIsConneted))
     if sIsConneted:
         async with sPool.cursor() as sCur:
             try:
                 await sCur.execute( aSql )
                 sResult = await sCur.fetchall()
                 _func.debug_log( "try_Execute", aSql + " is Success" )
+                sSuccess = True
             except Exception as sEx:
-                print( sEx )   
-            sSuccess = True         
+                print( "try_Execute_once Error : " +  str(sEx) )   
+                sSuccess = False
+        
+        gConnectPool.release(sPool)    
     else:
-        print( "try Execute connect error" )
-        sSuccess = False
-    
-    sPool.close()
+        print( "try_Execute_once Error : try Execute connect error" )
+        sSuccess = False      
     
     return sSuccess
 
+async def try_Execute_with_Cursor( aCur, aSql : str ) -> bool:
+    _func.debug_log( "try_Execute", aSql )
+
+    sSuccess = False
+    try:
+        await aCur.execute( aSql )
+        sResult = await aCur.fetchall()
+        sSuccess = True  
+        _func.debug_log( "try_Execute", aSql + " is Success" )
+    except Exception as sEx:
+        print( "Error try_Execute_With_Cursor Function : " + str(sEx) )   
+        sSuccess = False
+    
+    return sSuccess
+    
 
 async def insertAccessKeyData( aKey:str, aLoginDate:datetime ):
     _func.debug_log( "insertAccessKeyData", "Key : " + aKey + " Date : " + str(aLoginDate) )
     sSql = f"INSERT INTO PSS_ACCESS_KEY_TABLE( Access_Key, Login_Date ) VALUES( '{aKey}', '{str(aLoginDate.strftime(_time.DATABASE_DATETIME_FORMAT))}' )"
-    sSuccess = await try_Execute( sSql )
+    sSuccess = await try_Execute_once( sSql )
     return sSuccess
 
 
 async def updateAccessKeyData( aKey:str, aLoginDate:datetime ):
     _func.debug_log( "updateAccessKeyData", "Key : " + aKey + " Date : " + str(aLoginDate) )
     sSql = f"UPDATE PSS_ACCESS_KEY_TABLE SET Access_Key='{aKey}', Login_Date='{str(aLoginDate.strftime(_time.DATABASE_DATETIME_FORMAT))}';"
-    sSuccess = await try_Execute( sSql )
+    sSuccess = await try_Execute_once( sSql )
     return sSuccess
 
 
@@ -179,7 +212,7 @@ def getEntityData( aEntityData: _type.EntityInfo, aCol: str, aType: int ):
 
 
 async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: int ):
-    sUserID            = aUser['AllianceId']
+    sUserID            = aUser['Id']
     sTourneyDate       = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
     sUserName          = getEntityData( aUser, 'Name', _type.STR_TYPE )
     sStarScore         = getEntityData( aUser, 'AllianceScore', _type.INT_TYPE )
@@ -207,9 +240,11 @@ async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: in
             {sAtkWin}, {sAtkLose}, {sAtkDraw}, \
                 {sDefWin}, {sDefLose}, {sDefDraw}, \
                     {sCrewDonated}, {sCrewReceived}, {sChampionshipScore} )"
-    _func.debug_log("insertTourneyUserInfo", sSql) 
+ 
                   
-    sSuccess = await try_Execute( sSql )
+    sSuccess = await try_Execute_once( sSql )
+    if sSuccess != True:
+        print( "insertTourneyUserInfo Fail : " + sSql )
     return sSuccess
 
 # async def insertTourneyUserInfo( aUserInfo: _func.EntityInfo ):
@@ -276,8 +311,11 @@ async def select_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.Column
 
                 _func.debug_log( "select_Table", sSql + " is Success" )
             except Exception as sEx:
-                print( sEx )   
-            sSuccess = True         
+                
+                print( "select_Table Error : " + str(sEx) )   
+            sSuccess = True
+
+        gConnectPool.release(sPool)          
     else:
         print( "select_Table connect error" )
         sSuccess = False
@@ -302,11 +340,12 @@ async def desc_Table( aTableName: str ):
 
                 _func.debug_log( "desc_Table", sSql + " is Success" )
             except Exception as sEx:
-                print( sEx )   
-            sSuccess = True         
+                print( "desc_Table Error : " + str(sEx) )   
+            sSuccess = True    
+
+        gConnectPool.release(sPool)
     else:
         print( "desc_Table connect error" )
         sSuccess = False
     
-        
     return sSuccess, sResult

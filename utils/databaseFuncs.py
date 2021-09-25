@@ -110,23 +110,18 @@ async def _initTourneyData():
     sSuccess = await db.try_Create_Table( "PSS_TOURNEY_USER_TABLE", gColumn_Definitions_TOURNEY_USER_LIST )
     if sSuccess:
         sSuccess, sResultList = await db.select_Table( "PSS_TOURNEY_USER_TABLE" )
-        print( sResultList )
         
         await db.try_add_primary_key( "PSS_TOURNEY_USER_TABLE", ['User_ID', 'Tourney_Date'] )
         sSuccess, sResultList = await db.desc_Table( "PSS_TOURNEY_USER_TABLE" )
-        print( sResultList )
         
     _func.debug_log( "PSS_TOURNEY_USER_TABLE", f'Success : {sSuccess}' )
     
     sSuccess = await db.try_Create_Table( "PSS_TOURNEY_FLEET_TABLE", gColumn_Definitions_TOURNEY_FLEET_LIST )
     if sSuccess:
         sSuccess, sResultList = await db.select_Table( "PSS_TOURNEY_FLEET_TABLE" )
-        print( sResultList )
-        
+
         await db.try_add_primary_key( "PSS_TOURNEY_FLEET_TABLE", ['Fleet_ID', 'Tourney_Date'] )
         sSuccess, sResultList = await db.desc_Table( "PSS_TOURNEY_FLEET_TABLE" )
-        
-        print( sResultList )
         
     _func.debug_log( "PSS_TOURNEY_FLEET_TABLE", f'Success : {sSuccess}' )
     
