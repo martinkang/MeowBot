@@ -77,6 +77,27 @@ def get_next_day( aDate: datetime = None ) -> datetime:
     sResult = sResult + ONE_DAY
     return sResult
 
+def get_first_of_following_month(utc_now: datetime) -> datetime:
+    year = utc_now.year
+    month = utc_now.month + 1
+    if (month == 13):
+        year += 1
+        month = 1
+    result = datetime(year, month, 1, 0, 0, 0, 0, _timezone.utc)
+    return result
+
+
+def get_first_of_next_month(utc_now: datetime = None) -> datetime:
+    if utc_now is None:
+        utc_now = get_utc_now()
+    return get_first_of_following_month(utc_now)
+
+
+def get_current_tourney_start(utc_now: datetime = None) -> datetime:
+    first_of_next_month = get_first_of_next_month(utc_now)
+    result = first_of_next_month - ONE_WEEK
+    return result
+
 
 def isStilLogin( aNow:datetime, aLastLoginDate:datetime, aLastHeartBeat:datetime  ):
     sIsLogin = True
@@ -96,3 +117,7 @@ def isStilLogin( aNow:datetime, aLastLoginDate:datetime, aLastHeartBeat:datetime
         
     _func.debug_log( "isStilLogin", f'NOW : {aNow} HB : {sLastHeartBeat} Login : {sLastLoginDate} sisLogin : {sIsLogin}' )
     return sIsLogin
+
+
+def getDateTimeFormatFromDate( aYear: int = 1, aMonth: int = 1, aDay: int = 1):
+    return datetime(year=aYear, month=aMonth, day=aDay, hour=0, minute=0, second=0, microsecond=0, tzinfo= _timezone.utc) 

@@ -105,6 +105,7 @@ async def __get_users_data( aUserName: str) -> _type.EntitiesData:
     return user_infos
 
 
+
 async def get_Selected_User_N_Ship_Info( aCtx: Context, aNow:datetime, aUserIDSet: Dict, aUserInfos: List[_type.EntityInfo] ):
     def check(m): 
         return m.author == aCtx.message.author and m.channel == aCtx.message.channel 
@@ -144,6 +145,38 @@ async def _get_top_captains_For_UserInfos( aSkip: int, aTake: int) -> List[_type
         print(f'An unknown error occured while retrieving the top captains. Please contact the bot\'s author!')   
         
     return sPreparedData
+
+
+async def get_fleet_infos_by_name( _: Context, aFleetName: str ) -> List[_type.EntityInfo]:
+    sFleetInfos = list( (await __get_fleet_data( aFleetName ) ).values())
+    return sFleetInfos
+
+
+async def __get_fleet_data( aFleetName: str) -> _type.EntitiesData:
+    sAccessToken = await _func.get_access_key()
+    sPath = await  _path.__get_search_fleets_base_path( sAccessToken, aFleetName )
+    print(sPath)
+    sRawData = await _func.get_data_from_path( sPath )
+    print(sRawData)
+    sFleet_infos = _parse.__xmltree_to_dict( sRawData, 3 )
+    print(sFleet_infos)
+    return sFleet_infos
+
+
+async def get_User_infos_by_Fleet_ID( _: Context, aFleetID: str ) -> List[_type.EntityInfo]:
+    sFleetInfos = await __get_fleet_users_data_by_ID( aFleetID )
+    return sFleetInfos
+
+async def __get_fleet_users_data_by_ID( aFleetID: str) -> _type.EntitiesData:
+    print("__get_fleet_users_data_by_ID " + aFleetID )
+    sAccessToken = await _func.get_access_key()
+    sPath = await  _path.__get_search_fleet_users_base_path( sAccessToken, aFleetID )
+    print(sPath)
+    sRawData = await _func.get_data_from_path( sPath )
+    print(sRawData)
+    sUsers_infos = _parse.__xmltree_to_dict( sRawData, 3 )
+    print(sUsers_infos)
+    return sUsers_infos
 
 
 async def _get_top_captains_data( aSkip: int, aTake: int) -> _type.EntitiesData:

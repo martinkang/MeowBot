@@ -13,6 +13,7 @@ LATEST_SETTINGS_BASE_PATH: str = 'SettingService/GetLatestVersion3?deviceType=De
 # ---------- RANKING ----------
 TOP_CAPTAIN_PATH: str = 'LadderService/ListUsersByRanking?accessToken'
 INCPECT_SHIP_PATH: str = 'ShipService/InspectShip2?accessToken'
+TOP_FLEETS_BASE_PATH: str = 'AllianceService/ListAlliancesByRanking?skip=0&take='
 
 # ---------- USER ----------
 INSPECT_SHIP_BASE_PATH = f'ShipService/InspectShip2'
@@ -22,7 +23,14 @@ LEAGUE_INFO_KEY_NAME = 'LeagueId'
 LEAGUE_INFOS_CACHE = []
 SEARCH_USERS_BASE_PATH = f'UserService/SearchUsers?searchString='
 
+STARS_BASE_PATH: str = 'AllianceService/ListAlliancesWithDivision'
 
+DIVISION_DESIGN_BASE_PATH: str = 'DivisionService/ListAllDivisionDesigns2'
+DIVISION_DESIGN_DESCRIPTION_PROPERTY_NAME: str = 'DivisionName'
+DIVISION_DESIGN_KEY_NAME: str = 'DivisionDesignId'
+
+SEARCH_FLEET_PATH: str = 'AllianceService/SearchAlliances?accessToken'
+FLEET_USERS_BASE_PATH: str ='AllianceService/ListUsers?accessToken'
 _safe_quoters = {}
 
 async def __get_top_captains_path( aAccessToken: str, aSkip: int, aTake: int) -> str:
@@ -39,3 +47,12 @@ async def __get_users_data_path(user_name: str) -> str:
     sResult = f'{SEARCH_USERS_BASE_PATH}{_convert.url_escape(user_name)}'
     _func.debug_log( "__get_users_data_path", f'Path : {sResult}' )
     return sResult
+
+async def __get_search_fleets_base_path( aAccessToken:str, aFleet_name: str) -> str:
+    sResult = f'{SEARCH_FLEET_PATH}={aAccessToken}&skip=0&take=100&name={_convert.url_escape(aFleet_name)}'
+    _func.debug_log( "__get_search_fleets_base_path", f'Path : {sResult}' )
+    return sResult
+
+async def __get_search_fleet_users_base_path( aAccessToken:str, aFleet_id: str) -> str:
+    result = f'{FLEET_USERS_BASE_PATH}={aAccessToken}&skip=0&take=100&allianceId={aFleet_id}'
+    return result

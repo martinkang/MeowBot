@@ -119,27 +119,31 @@ async def _initAccessKey():
 
   
 async def _initTourneyData():
-    _func.debug_log( "LAST_SAVED_TOURNEY_USER_DATA" )
-    sSuccess = await db.try_Create_Table( "LAST_SAVED_TOURNEY_DATA", gColumn_Definitions_LAST_SAVED_TOURNEY_USERS_DATA )
+    _func.debug_log( "LAST_SAVED_TOURNEY_USERS_DATA" )
+    sSuccess = await db.try_Create_Table( "LAST_SAVED_TOURNEY_USERS_DATA", gColumn_Definitions_LAST_SAVED_TOURNEY_USERS_DATA )
     
-    _func.debug_log( "LAST_SAVED_TOURNEY_FLEET_DATA" )
-    sSuccess = await db.try_Create_Table( "LAST_SAVED_TOURNEY_DATA", gColumn_Definitions_LAST_SAVED_TOURNEY_FLEETS_DATA )
+    _func.debug_log( "LAST_SAVED_TOURNEY_FLEETS_DATA" )
+    sSuccess = await db.try_Create_Table( "LAST_SAVED_TOURNEY_FLEETS_DATA", gColumn_Definitions_LAST_SAVED_TOURNEY_FLEETS_DATA )
     
+
+
     _func.debug_log( "PSS_TOURNEY_USER_TABLE" )
     sSuccess = await db.try_Create_Table( "PSS_TOURNEY_USER_TABLE", gColumn_Definitions_TOURNEY_USER_LIST )
     if sSuccess:
         sSuccess, sResultList = await db.select_Table( "PSS_TOURNEY_USER_TABLE" )
         
         await db.try_add_primary_key( "PSS_TOURNEY_USER_TABLE", ['User_ID', 'Tourney_Date'] )
-        sSuccess, sResultList = await db.desc_Table( "PSS_TOURNEY_USER_TABLE" )
+        #sSuccess, sResultList = await db.desc_Table( "PSS_TOURNEY_USER_TABLE" )
         
     _func.debug_log( "PSS_TOURNEY_USER_TABLE", f'Success : {sSuccess}' )
+
+
     sSuccess = await db.try_Create_Table( "PSS_TOURNEY_FLEET_TABLE", gColumn_Definitions_TOURNEY_FLEET_LIST )
     if sSuccess:
         sSuccess, sResultList = await db.select_Table( "PSS_TOURNEY_FLEET_TABLE" )
 
         await db.try_add_primary_key( "PSS_TOURNEY_FLEET_TABLE", ['Fleet_ID', 'Tourney_Date'] )
-        sSuccess, sResultList = await db.desc_Table( "PSS_TOURNEY_FLEET_TABLE" )
+        #sSuccess, sResultList = await db.desc_Table( "PSS_TOURNEY_FLEET_TABLE" )
         
     _func.debug_log( "PSS_TOURNEY_FLEET_TABLE", f'Success : {sSuccess}' )
     

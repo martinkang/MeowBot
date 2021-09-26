@@ -29,10 +29,10 @@ async def initTourneyDB():
     sNow = _time.get_utc_now()
            
     await insertMonthTourneyData( int(_time.PSS_TOURNEY_START_DATETIME.year),
-                                 int(_time.PSS_TOURNEY_START_DATETIME.month), 
-                                 12 )
+                                  int(_time.PSS_TOURNEY_START_DATETIME.month), 
+                                  12 )
         
-    for sYear in range( int(_time.PSS_TOURNEY_START_DATETIME.year) + 1, int(sNow.year) ):
+    for sYear in range( int(_time.PSS_TOURNEY_START_DATETIME.year) + 1, int(sNow.year) + 1):
         await insertMonthTourneyData( sYear,
                                       1, 
                                       12 )
@@ -41,65 +41,81 @@ async def initTourneyDB():
      
 
 async def insertMonthTourneyData( aYear: int, aStartMonth: int, aEndMonth: int):
-    for sMonth in range( aStartMonth, aEndMonth ):
-        sAlreadySaved = await _db.checkAlreadyInTourneyData( aYear, sMonth )
-        if sAlreadySaved:
+    _func.debug_log( "initTourneyDB", f"Year : {aYear} Start Month : {aStartMonth} End Month : {aEndMonth}" )
+
+    for sMonth in range( aStartMonth, aEndMonth + 1 ):
+        _, sUserCount = await _db.checkAlreadyInTourneyUserData( aYear, sMonth )
+        _, sFleetCount = await _db.checkAlreadyInTourneyFleetData( aYear, sMonth )
+        
+        if sFleetCount[0] > 0 and sUserCount[0] > 0:
             print( f'Load From {aYear} {sMonth} TourneyData Already Loaded' )
         else:
-            sTourneyata = getToureyData( aYear, sMonth )
-            print( f'Load From {aYear} {sMonth} TourneyData Success' )
-            
-            #await insertMonthTourneyUsersData( sTourneyata, aYear, sMonth )
-            await insertMonthTourneyFleetsData( sTourneyata, aYear, sMonth )
+            try:
+                sTourneyata = getTourneyData( aYear, sMonth )
+                print( f'Load From {aYear} {sMonth} TourneyData Success' )
+                
+                if sUserCount[0] == 0:
+                    await insertMonthTourneyUsersData( sTourneyata, aYear, sMonth )
+
+                if sFleetCount[0] == 0:
+                    await insertMonthTourneyFleetsData( sTourneyata, aYear, sMonth )
+            except Exception as sEx:
+                print( f"insertMonthTourneyData Year : {aYear} Month : {sMonth} is Error : {sEx}" )
          
 
 async def insertMonthTourneyUsersData( aTourneyData:TourneyData , aYear: int, aMonth: int):
-        sAlreadySaved = _db.checkAlreadyInTourneyData( aYear, aMonth )
-        sUserCount = 0
-        sSuccessCount = 0  
+    _func.debug_log( "insertMonthTourneyUsersData", f"Year : {aYear} Month : {aMonth}" )
 
-        for sUser in aTourneyData:
-            sUserCount = sUserCount + 1
-            try:
-                sSuccess = await _db.insertTourneyUserInfo( aTourneyData.get_user_data_by_id(sUser), 
-                                                            aYear, 
-                                                            aMonth )                                        
-                if sSuccess:
-                    sSuccessCount = sSuccessCount + 1
-            except Exception as sEx:
-                print("insertMonthTourneyData Error : " + sEx + " UserID : " + str(sUser))  
-                sSuccess = False
+    sUserCount = 0
+    sSuccessCount = 0  
 
-        print( f"insertMonthTourneyData {aYear} {aMonth} success UserCount : {sUserCount} Insert Success Count : {sSuccessCount}" )   
-        _, sUserCountInDB = _db.select_Table_Count( "PSS_TOURNEY_USER_TABLE" )
-        if sUserCountInDB == sUserCount:
-            sSuccess = await _db.insertLastSavedTourneyData( "LAST_SAVED_TOURNEY_USER_DATA", aYear, aMonth, sUserCountInDB )       
+    for sUser in aTourneyData.user_ids:
+        sUserCount = sUserCount + 1
+        try:
+            sSuccess = await _db.insertTourneyUserInfo( aTourneyData.get_user_data_by_id(sUser), 
+                                                        aYear, 
+                                                        aMonth )                                        
+            if sSuccess:
+                sSuccessCount = sSuccessCount + 1
+        except Exception as sEx:
+            print("insertMonthTourneyData Error : " + sEx + " UserID : " + str(sUser))  
+            sSuccess = False
+
+    print( f"insertMonthTourneyData {aYear} {aMonth} success UserCount : {sUserCount} Insert Success Count : {sSuccessCount}" )   
+    _, sUserCountInDB = await _db.selectCountTourneyUserData( aYear, aMonth )
+    print("sUserCountInDB " + str(sUserCountInDB[0]))
+    print("sUserCount " + str(sUserCount))
+    if sUserCountInDB[0] == sUserCount:
+        sSuccess = await _db.insertLastSavedTourneyUserData( aYear, aMonth, sUserCountInDB[0] )       
+
 
 
 async def insertMonthTourneyFleetsData( aTourneyData:TourneyData , aYear: int, aMonth: int):
-        sFleetCount = 0
-        sSuccessCount = 0
-        
-        for sFleet in aTourneyData.fleet_ids:
-            sFleetCount = sFleetCount + 1
-            try:
-                sSuccess = await _db.insertTourneyFleetInfo( aTourneyData.get_fleet_data_by_id(sFleet), 
-                                                             aYear, 
-                                                             aMonth )                                        
-                if sSuccess:
-                    sSuccessCount = sSuccessCount + 1
-            except Exception as sEx:
-                print("insertMonthTourneyData Error : " + sEx + " UserID : " + str(sFleet))  
-                sSuccess = False
+    _func.debug_log( "insertMonthTourneyFleetsData", f"Year : {aYear} Month : {aMonth}" )
 
-        print( f"insertMonthTourneyData {aYear} {aMonth} success FleetCount : {sFleetCount} Insert Success Count : {sSuccessCount}" )   
-        _, sFleetCountInDB = await _db.select_Table_Count( "PSS_TOURNEY_FLEET_TABLE" )
-        if sFleetCountInDB == sFleetCount:
-            sSuccess = await _db.insertLastSavedTourneyData( "LAST_SAVED_TOURNEY_FLEET_DATA", aYear, aMonth, sFleetCountInDB )       
+    sFleetCount = 0
+    sSuccessCount = 0
+    
+    for sFleet in aTourneyData.fleet_ids:
+        sFleetCount = sFleetCount + 1
+        try:
+            sSuccess = await _db.insertTourneyFleetInfo( aTourneyData.get_fleet_data_by_id(sFleet), 
+                                                            aYear, 
+                                                            aMonth )                                        
+            if sSuccess:
+                sSuccessCount = sSuccessCount + 1
+        except Exception as sEx:
+            print("insertMonthTourneyData Error : " + sEx + " UserID : " + str(sFleet))  
+            sSuccess = False
 
+    print( f"insertMonthTourneyData {aYear} {aMonth} success FleetCount : {sFleetCount} Insert Success Count : {sSuccessCount}" )   
+    _, sFleetCountInDB = await _db.selectCountTourneyFleetData( aYear, aMonth )
+    print("sFleetCountInDB " + str(sFleetCountInDB[0]))
+    print("sFleetCount " + str(sFleetCount))
+    if sFleetCountInDB[0] == sFleetCount:
+        sSuccess = await _db.insertLastSavedTourneyFleetData( aYear, aMonth, sFleetCountInDB[0] )       
 
-
-def getToureyData( aYear: int, aMonth: int ) -> TourneyData:
+def getTourneyData( aYear: int, aMonth: int ) -> TourneyData:
     sData: TourneyData = gTourneyDataClient.get_data( year = aYear, 
                                                       month = aMonth,
                                                       initializing=True )

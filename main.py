@@ -235,10 +235,7 @@ async def getU( aCtx: context ):
     start = time.time()  
     async with aCtx.typing():
         try:
-            sOutputEmbed = await getAsyncTopUserInfosByFunction( aCtx, 
-                                                            f'랭킹. 유저(함대) / 트로피 / 접속 / 보호막',
-                                                            NEED_SHIP_INFO, 
-                                                            _format.create_User_Immunity )  
+            sOutputEmbed = await _user.get_User_infos_by_Fleet_ID( aCtx, '43692')
             sOutputEmbed.set_footer(text="약 3분 정도 오차가 존재할 수 있습니다. / 접속중이면 보호막은 - 로 표기됩니다")
         except Exception as sERR:
             sErrTxt = f'에러발생 : {sERR}'

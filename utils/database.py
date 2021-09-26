@@ -1,4 +1,5 @@
 from datetime import datetime
+from gdrive import TourneyData
 import aiomysql
 import asyncio
 import configparser
@@ -124,7 +125,7 @@ async def close_Connection():
 async def try_add_primary_key( aTableName: str,  aCols: List[str]) -> bool:
     sCols = ', '.join(aCols) 
     sSql = f'ALTER TABLE {aTableName} ADD PRIMARY KEY ( {sCols} );'
-    sSuccess = await try_Execute_once( sSql )
+    sSuccess, _ = await try_Execute_once( sSql )
     
     _func.debug_log( "try_add_primary_key", sSql )
     
@@ -136,7 +137,7 @@ async def try_Create_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.Co
 
     sCols = _dbFunc._getColumnListInDefination(aColumnDefinitions)
     sSql = f'CREATE TABLE IF NOT EXISTS {aTableName} ( {sCols} );'
-    sSuccess = await try_Execute_once( sSql )
+    sSuccess, _ = await try_Execute_once( sSql )
     
     return sSuccess
 
@@ -146,6 +147,7 @@ async def try_Execute_once( aSql : str, aData = None ) -> bool:
     
     sSuccess = True
     sIsConneted, sPool = await connect()
+    sResult = []
     if sIsConneted:
         async with sPool.cursor() as sCur:
             try:
@@ -154,7 +156,7 @@ async def try_Execute_once( aSql : str, aData = None ) -> bool:
                 _func.debug_log( "try_Execute", aSql + " is Success" )
                 sSuccess = True
             except Exception as sEx:
-                print( "try_Execute_once Error : " +  str(sEx) )   
+                _func.debug_log("try_Execute_once Error : " +  str(sEx) )   
                 sSuccess = False
         
         gConnectPool.release(sPool)    
@@ -162,7 +164,7 @@ async def try_Execute_once( aSql : str, aData = None ) -> bool:
         print( "try_Execute_once Error : try Execute connect error" )
         sSuccess = False      
     
-    return sSuccess
+    return sSuccess, sResult
 
 async def try_Execute_with_Cursor( aCur, aSql : str ) -> bool:
     _func.debug_log( "try_Execute", aSql )
@@ -174,7 +176,7 @@ async def try_Execute_with_Cursor( aCur, aSql : str ) -> bool:
         sSuccess = True  
         _func.debug_log( "try_Execute", aSql + " is Success" )
     except Exception as sEx:
-        print( "Error try_Execute_With_Cursor Function : " + str(sEx) )   
+        _func.debug_log( "Error try_Execute_With_Cursor Function : " + str(sEx) )   
         sSuccess = False
     
     return sSuccess
@@ -183,14 +185,14 @@ async def try_Execute_with_Cursor( aCur, aSql : str ) -> bool:
 async def insertAccessKeyData( aKey:str, aLoginDate:datetime ):
     _func.debug_log( "insertAccessKeyData", "Key : " + aKey + " Date : " + str(aLoginDate) )
     sSql = f"INSERT INTO PSS_ACCESS_KEY_TABLE( Access_Key, Login_Date ) VALUES( '{aKey}', '{str(aLoginDate.strftime(_time.DATABASE_DATETIME_FORMAT))}' )"
-    sSuccess = await try_Execute_once( sSql )
+    sSuccess, _ = await try_Execute_once( sSql )
     return sSuccess
 
 
 async def updateAccessKeyData( aKey:str, aLoginDate:datetime ):
     _func.debug_log( "updateAccessKeyData", "Key : " + aKey + " Date : " + str(aLoginDate) )
     sSql = f"UPDATE PSS_ACCESS_KEY_TABLE SET Access_Key='{aKey}', Login_Date='{str(aLoginDate.strftime(_time.DATABASE_DATETIME_FORMAT))}';"
-    sSuccess = await try_Execute_once( sSql )
+    sSuccess, _ = await try_Execute_once( sSql )
     return sSuccess
 
 
@@ -205,31 +207,116 @@ def getEntityData( aEntityData: _type.EntityInfo, aCol: str, aType: int ):
         elif aType == _type.STR_TYPE:
             sResult = ''
         elif aType == _type.DATE_TYPE:
-            sResult = _time.datetime(year=1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
+            sResult = _time.getDateTimeFormatFromDate()
         else:
             sResult = None
             
     return sResult  
 
 
-async def checkTourneyDataSaved( aTableName: str, aYear:int, aMonth: int ) -> bool:
-    sTourneyDate = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc) 
-    return
-
-async def insertLastSavedTourneyData( aTableName: str, aYear:int, aMonth:int, aNumUsers: int ):
-    sTourneyDate = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
-    sData = ( aTableName, sTourneyDate, aNumUsers ) 
-    sSql = """INSERT INTO %s values( %s, %s )"""
+async def insertLastSavedTourneyUserData( aYear:int, aMonth:int, aNumDatas: int ):
+    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sData = ( sTourneyDate, aNumDatas ) 
+    sSql = """INSERT INTO LAST_SAVED_TOURNEY_USERS_DATA values( %s, %s )"""
     
-    sSuccess = await try_Execute_once( sSql, sData )
+    sSuccess, _ = await try_Execute_once( sSql, sData )
+    print( f"insertLastSavedTourneyUserData Table : LAST_SAVED_TOURNEY_USERS_DATA Year : {aYear} Month : {aMonth} aNumOfData : {aNumDatas}" )
+    if sSuccess != True:
+        print( "insertLastSavedTourneyData Fail : " + sSql )
+        
+    return sSuccess
+
+async def insertLastSavedTourneyFleetData( aYear:int, aMonth:int, aNumDatas: int ):
+    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sData = ( sTourneyDate, aNumDatas ) 
+    sSql = """INSERT INTO LAST_SAVED_TOURNEY_FLEETS_DATA values( %s, %s )"""
+    
+    sSuccess, _ = await try_Execute_once( sSql, sData )
+    print( f"insertLastSavedTourneyFleetData Table : LAST_SAVED_TOURNEY_FLEETS_DATA Year : {aYear} Month : {aMonth} aNumOfData : {aNumDatas}" )
     if sSuccess != True:
         print( "insertLastSavedTourneyData Fail : " + sSql )
         
     return sSuccess
 
 
-async def checkAlreadyInTourneyData( aYear: int, aMonth: int ):
-    return False
+async def checkAlreadyInTourneyUserData( aYear: int, aMonth: int ):
+    _func.debug_log( "checkAlreadyInTourneyUserData", f"Year : {aYear} Month : {aMonth}" )
+    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sData = ( sTourneyDate )
+    sSql = """SELECT NUMBER_OF_PLAYERS FROM LAST_SAVED_TOURNEY_USERS_DATA WHERE TOURNEY_DATE = %s"""
+    sSuccess, sResult = await try_Execute_once( sSql, sData )
+    if sSuccess != True:
+        print( "checkAlreadyInTourneyFleetData Fail : " + sSql )
+    
+    sTourneyUserCount = []
+    if len(sResult) == 0:
+        sTourneyUserCount = [0]
+    else:
+        sTourneyUserCount = sResult[0]
+
+    _func.debug_log( "checkAlreadyInTourneyUserData", f"Year : {aYear} Month : {aMonth} isSuccess : {sSuccess} Fleet Count : {sTourneyUserCount}" )
+    return sSuccess, sTourneyUserCount
+
+
+async def checkAlreadyInTourneyFleetData( aYear: int, aMonth: int ):
+    _func.debug_log( "checkAlreadyInTourneyFleetData", f"Year : {aYear} Month : {aMonth}" )
+
+    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sData = ( sTourneyDate )
+    sSql = """SELECT NUMBER_OF_FLEETS FROM LAST_SAVED_TOURNEY_FLEETS_DATA WHERE TOURNEY_DATE = %s"""
+    sSuccess, sResult = await try_Execute_once( sSql, sData )
+    if sSuccess != True:
+        print( "checkAlreadyInTourneyFleetData Fail : " + sSql )
+
+    sTourneyFleetCount = []
+    if len(sResult) == 0:
+        sTourneyFleetCount = [0]
+    else:
+        sTourneyFleetCount = sResult[0]
+
+    _func.debug_log( "checkAlreadyInTourneyFleetData", f"Year : {aYear} Month : {aMonth} isSuccess : {sSuccess} Fleet Count : {sTourneyFleetCount}" )
+    return sSuccess, sTourneyFleetCount
+
+
+async def selectCountTourneyUserData( aYear: int, aMonth: int ):
+    _func.debug_log( "selectCountTourneyUserData", f"Year : {aYear} Month : {aMonth}" )
+
+    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sData = ( sTourneyDate )
+    sSql = """SELECT COUNT(*) FROM PSS_TOURNEY_USER_TABLE WHERE TOURNEY_DATE = %s"""
+    sSuccess, sResult = await try_Execute_once( sSql, sData )
+    if sSuccess != True:
+        print( "selectCountTourneyUserData Fail : " + sSql )
+
+    sTourneyUserCount = []
+    if len(sResult) == 0:
+        sTourneyUserCount = [0]
+    else:
+        sTourneyUserCount = sResult[0]
+
+    _func.debug_log( "selectCountTourneyUserData", f"Year : {aYear} Month : {aMonth} isSuccess : {sSuccess} Fleet Count : {sTourneyUserCount}" )
+    return sSuccess, sTourneyUserCount
+
+
+async def selectCountTourneyFleetData( aYear: int, aMonth: int ):
+    _func.debug_log( "selectCountTourneyFleetData", f"Year : {aYear} Month : {aMonth}" )
+
+    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sData = ( sTourneyDate )
+    sSql = """SELECT COUNT(*) FROM PSS_TOURNEY_FLEET_TABLE WHERE TOURNEY_DATE = %s"""
+    sSuccess, sResult = await try_Execute_once( sSql, sData )
+    if sSuccess != True:
+        print( "selectCountTourneyFleetData Fail : " + sSql )
+
+
+    sTourneyFleetCount = []
+    if len(sResult) == 0:
+        sTourneyFleetCount = [0]
+    else:
+        sTourneyFleetCount = sResult[0]
+
+    _func.debug_log( "selectCountTourneyFleetData", f"Year : {aYear} Month : {aMonth} isSuccess : {sSuccess} Fleet Count : {sTourneyFleetCount}" )
+    return sSuccess, sTourneyFleetCount
 
 
 async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: int ):
@@ -250,7 +337,9 @@ async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: in
     sCrewDonated       = getEntityData( aUser, 'CrewDonated', _type.INT_TYPE )
     sCrewReceived      = getEntityData( aUser, 'CrewReceived', _type.INT_TYPE )
     sChampionshipScore = getEntityData( aUser, 'ChampionshipScore', _type.INT_TYPE )
-     
+    
+    _func.debug_log( "insertTourneyUserInfo", f"Year : {aYear} Month : {aMonth} ID : {sUserID}" ) 
+
     sData = ( sUserID, sTourneyDate, sUserName, sStarScore, 
               sFleetID,  sFleetJoinDate, sFleetMembership, sTrophy,
               sAtkWin, sAtkLose, sAtkDraw,
@@ -268,9 +357,9 @@ async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: in
     %s, %s, %s,
     %s, %s, %s )""" 
                             
-    sSuccess = await try_Execute_once( sSql, sData )
-    if sSuccess != True:
-        print( "insertTourneyUserInfo Fail : " + sSql )
+    sSuccess, _ = await try_Execute_once( sSql, sData )
+    # if sSuccess != True:
+    #     print( "insertTourneyUserInfo Fail : " + sSql )
     return sSuccess
 
 async def insertTourneyFleetInfo( aFleet: _type.EntityInfo, aYear: int, aMonth: int ):
@@ -282,7 +371,9 @@ async def insertTourneyFleetInfo( aFleet: _type.EntityInfo, aYear: int, aMonth: 
     sTrophy            = getEntityData( aFleet, 'Trophy', _type.INT_TYPE )
     sNumOfMembers      = getEntityData( aFleet, 'NumberOfMembers', _type.INT_TYPE )
     sChampionshipScore = getEntityData( aFleet, 'ChampionshipScore', _type.INT_TYPE )
-     
+   
+    _func.debug_log( "insertTourneyFleetInfo", f"Year : {aYear} Month : {aMonth} ID : {sFleetID}" )  
+
     sData = ( sFleetID, sTourneyDate, sFleetName, sStarScore, 
               sTrophy, lookups.DIVISION_DESIGN_ID_TO_CHAR[str(sDivision)], sNumOfMembers, sChampionshipScore )
     sSql = """
@@ -291,16 +382,19 @@ async def insertTourneyFleetInfo( aFleet: _type.EntityInfo, aYear: int, aMonth: 
     value( %s, %s, %s, %s,         
     %s, %s, %s, %s )""" 
              
-    sSuccess = await try_Execute_once( sSql, sData )
-    if sSuccess != True:
-        print( "insertTourneyFleetInfo Fail : " + sSql )
+    sSuccess, _ = await try_Execute_once( sSql, sData )
+    # if sSuccess != True:
+    #     print( "insertTourneyFleetInfo Fail : " + sSql )
     return sSuccess
 
 
-async def select_Table_Count( aTableName: str ):
+async def select_Table_Count( aTableName: str, aWhere: str = None ):
     _func.debug_log( "select_Table_Count", aTableName )
     
-    sSql = f'SELECT count(*) FROM {aTableName};'
+    if aWhere is None:
+        sSql = f'SELECT count(*) FROM {aTableName};'
+    else:
+        sSql = f'SELECT count(*) FROM {aTableName} WHERE {aWhere};'
     
     sIsConneted, sPool = await connect()
     
