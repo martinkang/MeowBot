@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta, timezone as _timezone, date as _date
+import datetime as _datetime
 import sys
 import os
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
@@ -70,12 +71,27 @@ def get_time_diff( aStart: datetime, aEnd: datetime)->datetime: #str:
     return abs(aEnd- aStart)
     
     
-
 def get_next_day( aDate: datetime = None ) -> datetime:
     sDate = aDate or get_utc_now()
     sResult = datetime(sDate.year, sDate.month, sDate.day, tzinfo=_timezone.utc)
     sResult = sResult + ONE_DAY
     return sResult
+
+def getLastDayOfMonth( aYear:int, aMonth:int ) -> datetime:
+    sNextMonth = 0
+    sNextYear = 0
+    if ( aMonth == 12 ):
+        sNextMonth = 1
+        sNextYear = aYear + 1
+    else:
+        sNextMonth = aMonth
+        sNextYear = aYear
+
+    sDate = getDateTimeFormatFromDate( sNextYear, sNextMonth )
+    sLastDayOfMonth = sDate - timedelta(days=1)
+
+    return sLastDayOfMonth
+
 
 def get_first_of_following_month(utc_now: datetime) -> datetime:
     year = utc_now.year
@@ -119,5 +135,5 @@ def isStilLogin( aNow:datetime, aLastLoginDate:datetime, aLastHeartBeat:datetime
     return sIsLogin
 
 
-def getDateTimeFormatFromDate( aYear: int = 1, aMonth: int = 1, aDay: int = 1):
+def getDateTimeFormatFromDate( aYear: int = PSS_START_DATE.year, aMonth: int = PSS_START_DATE.month, aDay: int = 1 ):
     return datetime(year=aYear, month=aMonth, day=aDay, hour=0, minute=0, second=0, microsecond=0, tzinfo= _timezone.utc) 

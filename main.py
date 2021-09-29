@@ -1,6 +1,6 @@
 import sys
 from asyncio.tasks import sleep
-from datetime import date, datetime
+import datetime 
 from typing import Dict, List, Tuple
 
 
@@ -12,7 +12,7 @@ from utils import discord as _discord
 from utils import format as _format
 
 # --------------- Schedule --------------- 
-import schedule
+
 import time
 
 # --------------- User Module ---------------
@@ -244,6 +244,34 @@ async def getU( aCtx: context ):
         await aCtx.send(embed=sOutputEmbed)
     print( f'ASync Time : {time.time() - start}')
 
+
+@gBot.command(name='토너', aliases=['stars', '별'], brief=['토너 별'] )
+async def getU( aCtx: context ):
+    """
+    설명쓰기
+    """   
+
+    sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
+    if sisAuthorized is not True:
+        await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
+        return
+    
+    # if _time.get_current_tourney_start():
+    #     async with aCtx.typing():
+    #          if not pss_tournament.is_valid_division_letter(division):
+    #         try:
+    #             sOutputEmbed = await _user.get_User_infos_by_Fleet_ID( aCtx, '43692')
+    #             sOutputEmbed.set_footer(text="약 3분 정도 오차가 존재할 수 있습니다. / 접속중이면 보호막은 - 로 표기됩니다")
+    #         except Exception as sERR:
+    #             sErrTxt = f'에러발생 : {sERR}'
+    #             sOutputEmbed = discord.Embed(title=f'에러 발생', description=sErrTxt, color=0x00aaaa)   
+                
+    #         await aCtx.send(embed=sOutputEmbed)
+    # else:
+    #     sErrTxt = '지금은 토너먼트 기간이 아닙니다'
+    #     sOutputEmbed = discord.Embed(title=f'에러 발생', description=sErrTxt, color=0x00aaaa)   
+    #     return
+   
     
 @gBot.group(name='보호막', aliases=['이뮨', 'immunity', '방어'], brief=['플레이어 보호막 정보'], invoke_without_command=True )
 async def getUserInfo( aCtx: Context ):         
@@ -340,6 +368,20 @@ async def getUserAliveInfo_top( aCtx: context ):
 
 
 #==============================================================================================
+# Schedule
+#==============================================================================================
+@tasks.loop(minute=5)
+def saveLastDayTourneyStars():
+    
+    # if _time.get_current_tourney_start:
+    #     sNow = _time.get_utc_now()
+    #     if sNow.hour == 23 and sNow.minute > 55:
+
+        
+    # else:
+    #     return
+
+#==============================================================================================
 # Initialize Bot
 #==============================================================================================
 @gBot.event
@@ -367,7 +409,8 @@ async def initBot():
         print( 'init Bot Failure : ' + str(sEx) )
         sys.exit()
 
-    #sKey = await _func.get_access_key()
+    sKey = await _func.get_access_key()
+    print( "initBot AccessKey : ", sKey )
    
 
 if __name__ == "__main__":

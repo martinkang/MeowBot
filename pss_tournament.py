@@ -4,6 +4,9 @@ from utils import functions as _func
 from utils import time as _time
 from utils import database as _db
 from utils import type as _type
+from typing import List
+
+import pss_lookups as lookups
 
 #==============================================================================================
 # Tournament Data from GDRIVE
@@ -21,13 +24,14 @@ gTourneyDataClient: TourneyDataClient = TourneyDataClient(
     _settings.TOURNAMENT_DATA_START_DATE
 )
 
+ALLOWED_DIVISION_LETTERS: List[str] = sorted([letter for letter in lookups.DIVISION_CHAR_TO_DESIGN_ID.keys() if letter != '-'])
 
 async def initTourneyDB():
     _func.debug_log( "initTourneyDB" )
     
     sSuccess = False
     sNow = _time.get_utc_now()
-           
+
     await insertMonthTourneyData( int(_time.PSS_TOURNEY_START_DATETIME.year),
                                   int(_time.PSS_TOURNEY_START_DATETIME.month), 
                                   12 )
@@ -42,8 +46,14 @@ async def initTourneyDB():
 
 async def insertMonthTourneyData( aYear: int, aStartMonth: int, aEndMonth: int):
     _func.debug_log( "initTourneyDB", f"Year : {aYear} Start Month : {aStartMonth} End Month : {aEndMonth}" )
+    sNow = _time.get_utc_now()
+    sNowYear = sNow.year
+    sNowMonth = sNow.month 
 
     for sMonth in range( aStartMonth, aEndMonth + 1 ):
+        if aYear == sNowYear and sNowMonth == sMonth:
+            break
+
         _, sUserCount = await _db.checkAlreadyInTourneyUserData( aYear, sMonth )
         _, sFleetCount = await _db.checkAlreadyInTourneyFleetData( aYear, sMonth )
         
@@ -120,3 +130,10 @@ def getTourneyData( aYear: int, aMonth: int ) -> TourneyData:
                                                       month = aMonth,
                                                       initializing=True )
     return sData
+
+def is_valid_division_letter(div_letter: str) -> bool:
+    if div_letter is None:
+        result = True
+    else:
+        result = div_letter.lower() in [letter.lower() for letter in ALLOWED_DIVISION_LETTERS]
+    return result

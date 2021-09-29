@@ -156,7 +156,7 @@ async def try_Execute_once( aSql : str, aData = None ) -> bool:
                 _func.debug_log( "try_Execute", aSql + " is Success" )
                 sSuccess = True
             except Exception as sEx:
-                _func.debug_log("try_Execute_once Error : " +  str(sEx) )   
+                _func.debug_log("try_Execute_once Error : ",  str(sEx) )   
                 sSuccess = False
         
         gConnectPool.release(sPool)    
@@ -198,8 +198,13 @@ async def updateAccessKeyData( aKey:str, aLoginDate:datetime ):
 
 def getEntityData( aEntityData: _type.EntityInfo, aCol: str, aType: int ):      
     sResult = None
+    sEntityDataIsValid = False
     
     if aCol in aEntityData:
+        if ( aEntityData[aCol] is not None ) and ( aEntityData[aCol] != '' ) :
+            sEntityDataIsValid = True
+
+    if sEntityDataIsValid:
         sResult = aEntityData[aCol]
     else:
         if aType == _type.INT_TYPE:
@@ -215,7 +220,7 @@ def getEntityData( aEntityData: _type.EntityInfo, aCol: str, aType: int ):
 
 
 async def insertLastSavedTourneyUserData( aYear:int, aMonth:int, aNumDatas: int ):
-    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sTourneyDate = _time.getLastDayOfMonth( aYear, aMonth )
     sData = ( sTourneyDate, aNumDatas ) 
     sSql = """INSERT INTO LAST_SAVED_TOURNEY_USERS_DATA values( %s, %s )"""
     
@@ -227,7 +232,7 @@ async def insertLastSavedTourneyUserData( aYear:int, aMonth:int, aNumDatas: int 
     return sSuccess
 
 async def insertLastSavedTourneyFleetData( aYear:int, aMonth:int, aNumDatas: int ):
-    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sTourneyDate = _time.getLastDayOfMonth( aYear, aMonth )
     sData = ( sTourneyDate, aNumDatas ) 
     sSql = """INSERT INTO LAST_SAVED_TOURNEY_FLEETS_DATA values( %s, %s )"""
     
@@ -241,7 +246,8 @@ async def insertLastSavedTourneyFleetData( aYear:int, aMonth:int, aNumDatas: int
 
 async def checkAlreadyInTourneyUserData( aYear: int, aMonth: int ):
     _func.debug_log( "checkAlreadyInTourneyUserData", f"Year : {aYear} Month : {aMonth}" )
-    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sTourneyDate = _time.getLastDayOfMonth( aYear, aMonth )
+
     sData = ( sTourneyDate )
     sSql = """SELECT NUMBER_OF_PLAYERS FROM LAST_SAVED_TOURNEY_USERS_DATA WHERE TOURNEY_DATE = %s"""
     sSuccess, sResult = await try_Execute_once( sSql, sData )
@@ -261,7 +267,7 @@ async def checkAlreadyInTourneyUserData( aYear: int, aMonth: int ):
 async def checkAlreadyInTourneyFleetData( aYear: int, aMonth: int ):
     _func.debug_log( "checkAlreadyInTourneyFleetData", f"Year : {aYear} Month : {aMonth}" )
 
-    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sTourneyDate = _time.getLastDayOfMonth( aYear, aMonth )
     sData = ( sTourneyDate )
     sSql = """SELECT NUMBER_OF_FLEETS FROM LAST_SAVED_TOURNEY_FLEETS_DATA WHERE TOURNEY_DATE = %s"""
     sSuccess, sResult = await try_Execute_once( sSql, sData )
@@ -281,7 +287,7 @@ async def checkAlreadyInTourneyFleetData( aYear: int, aMonth: int ):
 async def selectCountTourneyUserData( aYear: int, aMonth: int ):
     _func.debug_log( "selectCountTourneyUserData", f"Year : {aYear} Month : {aMonth}" )
 
-    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sTourneyDate = _time.getLastDayOfMonth( aYear, aMonth )
     sData = ( sTourneyDate )
     sSql = """SELECT COUNT(*) FROM PSS_TOURNEY_USER_TABLE WHERE TOURNEY_DATE = %s"""
     sSuccess, sResult = await try_Execute_once( sSql, sData )
@@ -301,7 +307,7 @@ async def selectCountTourneyUserData( aYear: int, aMonth: int ):
 async def selectCountTourneyFleetData( aYear: int, aMonth: int ):
     _func.debug_log( "selectCountTourneyFleetData", f"Year : {aYear} Month : {aMonth}" )
 
-    sTourneyDate = _time.getDateTimeFormatFromDate( aYear = aYear, aMonth = aMonth )
+    sTourneyDate = _time.getLastDayOfMonth( aYear, aMonth )
     sData = ( sTourneyDate )
     sSql = """SELECT COUNT(*) FROM PSS_TOURNEY_FLEET_TABLE WHERE TOURNEY_DATE = %s"""
     sSuccess, sResult = await try_Execute_once( sSql, sData )
@@ -321,7 +327,7 @@ async def selectCountTourneyFleetData( aYear: int, aMonth: int ):
 
 async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: int ):
     sUserID            = aUser['Id']
-    sTourneyDate       = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
+    sTourneyDate       = _time.getLastDayOfMonth( aYear, aMonth)
     sUserName          = getEntityData( aUser, 'Name', _type.STR_TYPE )
     sStarScore         = getEntityData( aUser, 'AllianceScore', _type.INT_TYPE )
     sFleetID           = getEntityData( aUser, 'AllianceId', _type.INT_TYPE )
@@ -364,7 +370,7 @@ async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: in
 
 async def insertTourneyFleetInfo( aFleet: _type.EntityInfo, aYear: int, aMonth: int ):
     sFleetID           = aFleet['AllianceId']
-    sTourneyDate       = _time.datetime(year=aYear, month=aMonth, day=1, hour=0, minute=0, second=0, microsecond=0, tzinfo=_time._timezone.utc)
+    sTourneyDate       = _time.getLastDayOfMonth( aYear, aMonth)
     sFleetName         = getEntityData( aFleet, 'AllianceName', _type.STR_TYPE )
     sStarScore         = getEntityData( aFleet, 'Score', _type.INT_TYPE )
     sDivision          = getEntityData( aFleet, 'DivisionDesignId', _type.INT_TYPE )
