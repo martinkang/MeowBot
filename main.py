@@ -246,17 +246,17 @@ async def getU( aCtx: context ):
 
 
 @gBot.command(name='토너', aliases=['stars', '별'], brief=['토너 별'] )
-async def getU( aCtx: context ):
+async def getU( aCtx: context, aDivision:str = None ):
     """
     설명쓰기
     """   
-
-    sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
-    if sisAuthorized is not True:
-        await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
-        return
+    print(aDivision)
+    # sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
+    # if sisAuthorized is not True:
+    #     await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
+    #     return
     
-    # if _time.get_current_tourney_start():
+    # if _time.isTourneyStart():
     #     async with aCtx.typing():
     #          if not pss_tournament.is_valid_division_letter(division):
     #         try:
@@ -370,16 +370,13 @@ async def getUserAliveInfo_top( aCtx: context ):
 #==============================================================================================
 # Schedule
 #==============================================================================================
-@tasks.loop(minute=5)
-def saveLastDayTourneyStars():
-    
-    # if _time.get_current_tourney_start:
-    #     sNow = _time.get_utc_now()
-    #     if sNow.hour == 23 and sNow.minute > 55:
-
-        
-    # else:
-    #     return
+# @tasks.loop(minute=5)
+# def saveLastDayTourneyStars():
+#     if _time.get_current_tourney_start():
+#         sNow = _time.get_utc_now()
+#         if sNow.hour == 23 and sNow.minute > 55:
+#     else:
+#         return
 
 #==============================================================================================
 # Initialize Bot

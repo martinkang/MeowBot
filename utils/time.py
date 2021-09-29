@@ -78,40 +78,36 @@ def get_next_day( aDate: datetime = None ) -> datetime:
     return sResult
 
 def getLastDayOfMonth( aYear:int, aMonth:int ) -> datetime:
+    sNextMonth = getFirstDayOfNextMonth( aYear, aMonth )
+
+    return sNextMonth - ONE_DAY
+
+
+def getFirstDayOfNextMonth( aYear:int, aMonth:int ) -> datetime:
     sNextMonth = 0
-    sNextYear = 0
+    sYear = 0
     if ( aMonth == 12 ):
         sNextMonth = 1
-        sNextYear = aYear + 1
+        sYear = aYear + 1
     else:
         sNextMonth = aMonth
-        sNextYear = aYear
+        sYear = aYear
 
-    sDate = getDateTimeFormatFromDate( sNextYear, sNextMonth )
-    sLastDayOfMonth = sDate - timedelta(days=1)
+    sFirstDayOfNextMonth = getDateTimeFormatFromDate( sYear, sNextMonth, 1 )
 
-    return sLastDayOfMonth
-
-
-def get_first_of_following_month(utc_now: datetime) -> datetime:
-    year = utc_now.year
-    month = utc_now.month + 1
-    if (month == 13):
-        year += 1
-        month = 1
-    result = datetime(year, month, 1, 0, 0, 0, 0, _timezone.utc)
-    return result
+    return sFirstDayOfNextMonth
 
 
-def get_first_of_next_month(utc_now: datetime = None) -> datetime:
-    if utc_now is None:
-        utc_now = get_utc_now()
-    return get_first_of_following_month(utc_now)
-
-
-def get_current_tourney_start(utc_now: datetime = None) -> datetime:
-    first_of_next_month = get_first_of_next_month(utc_now)
-    result = first_of_next_month - ONE_WEEK
+def isTourneyStart() ->bool:
+    sUtcNow = get_utc_now()
+    sTourneyFirstDay = getTourneyStartDate( sUtcNow )
+    
+    return sUtcNow > sTourneyFirstDay
+    
+    
+def getTourneyStartDate( aUtcNow:datetime ):
+    sFirstDayNExtMonth  = getFirstDayOfNextMonth( aUtcNow.year, aUtcNow.month )
+    result = sFirstDayNExtMonth - ONE_WEEK
     return result
 
 
