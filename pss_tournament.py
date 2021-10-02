@@ -131,9 +131,12 @@ def getTourneyData( aYear: int, aMonth: int ) -> TourneyData:
                                                       initializing=True )
     return sData
 
-def is_valid_division_letter(div_letter: str) -> bool:
-    if div_letter is None:
-        result = True
+def isDivisionLetter( aStr: str ) -> bool:
+    sResult = False
+    if aStr is None:
+        sResult = False
     else:
-        result = div_letter.lower() in [letter.lower() for letter in ALLOWED_DIVISION_LETTERS]
-    return result
+        sResult = aStr.lower() in [letter.lower() for letter in ALLOWED_DIVISION_LETTERS]
+    return sResult
+
+

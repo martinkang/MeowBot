@@ -90,7 +90,7 @@ def getFirstDayOfNextMonth( aYear:int, aMonth:int ) -> datetime:
         sNextMonth = 1
         sYear = aYear + 1
     else:
-        sNextMonth = aMonth
+        sNextMonth = aMonth + 1
         sYear = aYear
 
     sFirstDayOfNextMonth = getDateTimeFormatFromDate( sYear, sNextMonth, 1 )

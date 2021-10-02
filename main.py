@@ -250,27 +250,27 @@ async def getU( aCtx: context, aDivision:str = None ):
     """
     설명쓰기
     """   
-    print(aDivision)
-    # sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
-    # if sisAuthorized is not True:
-    #     await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
-    #     return
-    
-    # if _time.isTourneyStart():
-    #     async with aCtx.typing():
-    #          if not pss_tournament.is_valid_division_letter(division):
-    #         try:
-    #             sOutputEmbed = await _user.get_User_infos_by_Fleet_ID( aCtx, '43692')
-    #             sOutputEmbed.set_footer(text="약 3분 정도 오차가 존재할 수 있습니다. / 접속중이면 보호막은 - 로 표기됩니다")
-    #         except Exception as sERR:
-    #             sErrTxt = f'에러발생 : {sERR}'
-    #             sOutputEmbed = discord.Embed(title=f'에러 발생', description=sErrTxt, color=0x00aaaa)   
-                
-    #         await aCtx.send(embed=sOutputEmbed)
-    # else:
-    #     sErrTxt = '지금은 토너먼트 기간이 아닙니다'
-    #     sOutputEmbed = discord.Embed(title=f'에러 발생', description=sErrTxt, color=0x00aaaa)   
-    #     return
+    sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
+    if sisAuthorized is not True:
+        await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
+        return
+    if _time.isTourneyStart():
+        if aDivision is None:
+            # STARS_BASE_PATH 리그/함대별 별
+            return
+        elif pss_tournament.isDivisionLetter(aDivision):
+            # STARS_BASE_PATH 리그/함대별 별 여기서 리그만 골라서
+            return
+        else:
+            # 함대별 별. 함대 id 를 찾고 FLEET_USERS_BASE_PATH 구하기
+            return
+    else:
+        sErrTxt = '지금은 토너먼트 기간이 아닙니다'
+        sOutputEmbed = discord.Embed(title=f'에러 발생', description=sErrTxt, color=0x00aaaa)   
+        
+    await aCtx.send(embed=sOutputEmbed)
+    return
+   
    
     
 @gBot.group(name='보호막', aliases=['이뮨', 'immunity', '방어'], brief=['플레이어 보호막 정보'], invoke_without_command=True )
