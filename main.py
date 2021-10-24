@@ -412,7 +412,7 @@ async def initBot():
         print( 'Internal Function initilaize Success' )
         await db._init()
         print( 'Database initilaize Success' )            
-        #await pss_tournament.initTourneyDB()
+        await pss_tournament.initTourneyDB()
         print( 'Tournament Data initilaize Success' )
         print( 'init Bot Success' )
     except Exception as sEx:

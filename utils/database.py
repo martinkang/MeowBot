@@ -163,7 +163,7 @@ async def try_Execute_once( aSql : str, aData = None ) -> bool:
             try:
                 await sCur.execute( aSql, aData )
                 sResult = await sCur.fetchall()
-                _func.debug_log( "try_Execute", aSql + " is Success" )
+                #_func.debug_log( "try_Execute", aSql + " is Success" )
                 sSuccess = True
             except Exception as sEx:
                 _func.debug_log("try_Execute_once Error : ",  str(sEx) )   
@@ -184,7 +184,7 @@ async def try_Execute_with_Cursor( aCur, aSql : str ) -> bool:
         await aCur.execute( aSql )
         sResult = await aCur.fetchall()
         sSuccess = True  
-        _func.debug_log( "try_Execute", aSql + " is Success" )
+        #_func.debug_log( "try_Execute", aSql + " is Success" )
     except Exception as sEx:
         _func.debug_log( "Error try_Execute_With_Cursor Function : " + str(sEx) )   
         sSuccess = False
