@@ -110,10 +110,20 @@ async def connect():
             sConnect = True
         else:
             sConnect = False
-  
             
     return sConnect, sPool
 
+
+async def pingConnectDB():
+    _func.debug_log( "pingConnectDB", "Ping Test" )
+    
+    sIsConneted, sPool = await connect()
+    if sIsConneted:    
+        gConnectPool.release(sPool)    
+    else:
+        print( "Ping Database failure. Please retry" )
+        
+        
 def release_Connection( aCur ):
     gConnectPool.release( aCur )
 

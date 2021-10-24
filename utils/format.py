@@ -75,8 +75,8 @@ def create_User_List( aNo: int, aUserInfo: _type.EntityInfo) -> str:
 
 def _get_LastHeartBeat( aNow:datetime, aUserInfo: _type.EntityInfo ) ->datetime:
     sLastBeat = ""
-    sLastLogin = _time.get_TimeAsTimeZone( aUserInfo['LastLoginDate'] )
-    sLastHeartBeat = _time.get_TimeAsTimeZone( aUserInfo['LastHeartBeatDate'] )
+    sLastLogin = _time.get_BotTimeUTCFormat( aUserInfo['LastLoginDate'] )
+    sLastHeartBeat = _time.get_BotTimeUTCFormat( aUserInfo['LastHeartBeatDate'] )
     
     if sLastLogin > sLastHeartBeat:
         sLastBeat = _time.get_time_diff( sLastLogin, aNow )
@@ -91,7 +91,7 @@ def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo:
     sName = aUserInfo['Name']
     
     _func.debug_log("create_User_Immunity", f'Name : {sName}')
-    sLastBeat = _get_LastHeartBeat( aNow, aUserInfo )
+    
     sImmunity: datetime
     sImmunityStr: str
     sErrMsg = None
@@ -140,8 +140,10 @@ def _get_Immunity( aNow:datetime, aInfo: _type.EntityInfo ) ->datetime:
     sTime = ""
     sErrMsg = None
     
+    _func.debug_log( "_get_Immunity", f"aInfo Immun : {aInfo['ImmunityDate']} Now : {aNow}")
+    
     if 'ImmunityDate' in aInfo:
-        sImmunity = _time.get_TimeAsTimeZone( aInfo['ImmunityDate'] )
+        sImmunity = _time.get_BotTimeUTCFormat( aInfo['ImmunityDate'] )
 
         if sImmunity > aNow:
             sTime = _time.get_time_diff( sImmunity, aNow )

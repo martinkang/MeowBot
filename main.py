@@ -32,7 +32,7 @@ from utils import time as _time
 
 
 
-import pss_tournament
+import pss_tournament 
 
 
 #==============================================================================================
@@ -47,7 +47,6 @@ DO_NOT_NEED_SHIP_INFO: bool = False
 gBot = commands.Bot(command_prefix='-', status=discord.Status.online, activity=discord.Game("-냥냥냥") )
 
 
-
 #==============================================================================================
 # Bot Commands Sub Functions
 #==============================================================================================
@@ -58,7 +57,7 @@ async def getUserInfoByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool,
         sUserInfos = await _user.get_users_infos_by_name( aCtx, sExactName )
 
     if sUserInfos:
-        sNow = _time.get_now()
+        sNow = _time.get_utc_now()
         sErrMsg, sOutput = await _user._getUserInfoByFunction( aCtx,
                                                             sExactName,
                                                             sNow,
@@ -89,7 +88,7 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
     if sTopUserInfos:
         sOutputList = ''
         sRank = sStart
-        sNow = _time.get_now()
+        sNow = _time.get_utc_now()
         
         for sUser in sTopUserInfos:
             sInfosTxt = None
@@ -139,7 +138,7 @@ async def getAsyncTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipI
     if sTopUserInfos:
         sOutputList = ''
         sRank = sStart
-        sNow = _time.get_now()
+        sNow = _time.get_utc_now()
         
         sUserInfos = []
         sUserList = []
@@ -250,23 +249,32 @@ async def getU( aCtx: context, aDivision:str = None ):
     """
     설명쓰기
     """   
+    return
     sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
     if sisAuthorized is not True:
         await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
         return
-    if _time.isTourneyStart():
-        if aDivision is None:
-            # STARS_BASE_PATH 리그/함대별 별
-            return
-        elif pss_tournament.isDivisionLetter(aDivision):
-            # STARS_BASE_PATH 리그/함대별 별 여기서 리그만 골라서
-            return
+    
+    async with aCtx.typing():
+        if _time.isTourneyStart():
+            if aDivision is None:
+                sStars = await pss_tournament.getStars()
+                sOutputEmbed = discord.Embed(title="토너먼트 별 현황", description=sStars, color=0x00aaaa)
+                
+                for sStarInfo in sStars:
+                    print(sStarInfo)
+                    print()
+                #sOutputEmbed.set_footer(text="약 3분 정도 오차가 존재할 수 있습니다. / 접속중이면 보호막은 - 로 표기됩니다")
+                # STARS_BASE_PATH 리그/함대별 별
+            elif pss_tournament.isDivisionLetter(aDivision):
+                # STARS_BASE_PATH 리그/함대별 별 여기서 리그만 골라서
+                return
+            else:
+                # 함대별 별. 함대 id 를 찾고 FLEET_USERS_BASE_PATH 구하기
+                return
         else:
-            # 함대별 별. 함대 id 를 찾고 FLEET_USERS_BASE_PATH 구하기
-            return
-    else:
-        sErrTxt = '지금은 토너먼트 기간이 아닙니다'
-        sOutputEmbed = discord.Embed(title=f'에러 발생', description=sErrTxt, color=0x00aaaa)   
+            sErrTxt = '지금은 토너먼트 기간이 아닙니다'
+            sOutputEmbed = discord.Embed(title=f'에러 발생', description=sErrTxt, color=0x00aaaa)   
         
     await aCtx.send(embed=sOutputEmbed)
     return
@@ -387,9 +395,15 @@ async def on_ready():
     print( 'User Name : ' + gBot.user.name )
     print( 'Bot ID    : ' + str(gBot.user.id) )
     print( '--------------' )
+    #pingDatatbase.start()
+    
+
+@tasks.loop(seconds=10)
+async def pingDatatbase():
+    await db.pingConnectDB()
 
 
-async def initBot():
+async def initBot(): 
     print( 'init Bot' )
     try:
         _time.init()
@@ -397,10 +411,9 @@ async def initBot():
         _func.init()
         print( 'Internal Function initilaize Success' )
         await db._init()
-        print( 'Database initilaize Success' )
-        await pss_tournament.initTourneyDB()
+        print( 'Database initilaize Success' )            
+        #await pss_tournament.initTourneyDB()
         print( 'Tournament Data initilaize Success' )
-
         print( 'init Bot Success' )
     except Exception as sEx:
         print( 'init Bot Failure : ' + str(sEx) )
@@ -409,9 +422,13 @@ async def initBot():
     sKey = await _func.get_access_key()
     print( "initBot AccessKey : ", sKey )
    
-
-if __name__ == "__main__":
-    asyncio.run( initBot() )
+if sys.platform == 'win32':
+    # Set the policy to prevent "Event loop is closed" error on Windows - https://github.com/encode/httpx/issues/914
+    asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     
+if __name__ == "__main__":  
+    asyncio.run( initBot() )
+     
+#asyncio.create_task(pingDatatbase())
 gBot.run( os.environ.get('MEOW_BOT_TOKEN') )
 

@@ -48,11 +48,19 @@ async def __get_users_data_path(user_name: str) -> str:
     _func.debug_log( "__get_users_data_path", f'Path : {sResult}' )
     return sResult
 
+# 토너먼트에 참가하는 모든 함대의 별 갯수
+async def __get_search_all_fleets_stars() -> str:
+    sResult = f'{STARS_BASE_PATH}'
+    _func.debug_log( "__get_search_all_fleets_stars", f'Path : {sResult}' )
+    return sResult
+    
+# 함대의 총 별 갯수
 async def __get_search_fleets_base_path( aAccessToken:str, aFleet_name: str) -> str:
     sResult = f'{SEARCH_FLEET_PATH}={aAccessToken}&skip=0&take=100&name={_convert.url_escape(aFleet_name)}'
     _func.debug_log( "__get_search_fleets_base_path", f'Path : {sResult}' )
     return sResult
 
+# 함대내의 함대원 별 별 갯수
 async def __get_search_fleet_users_base_path( aAccessToken:str, aFleet_id: str) -> str:
     result = f'{FLEET_USERS_BASE_PATH}={aAccessToken}&skip=0&take=100&allianceId={aFleet_id}'
     return result

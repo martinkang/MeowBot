@@ -9,5 +9,4 @@ async def get_Inspect_Ship_info( aID ):
     raw_data = await _func.get_data_from_path( sPath )
     sShipInfo = _parse.__xmltree_to_dict( raw_data, 2 )
     
-    print(sShipInfo)
     return sShipInfo.get('Ship', None)

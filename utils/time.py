@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta, timezone as _timezone, date as _date
+from datetime import datetime, timedelta, timezone as _timezone, date as _date, tzinfo
 import datetime as _datetime
 import sys
 import os
@@ -35,7 +35,7 @@ PSS_TOURNEY_START_DATETIME: datetime = datetime(year=2019, month=10, day=1)
 
 # ---------- TIMEOUT-----------
 ACCESS_TOKEN_TIMEOUT: timedelta = timedelta(hours=12)
-LOGIN_CHECK_TIMEOUT: timedelta = timedelta(minutes=3)
+LOGIN_CHECK_TIMEOUT: timedelta = timedelta(minutes=2)
 SEARCH_IMMUNITY_TIMEOUT: timedelta = timedelta(minutes=10)
 SEARCH_IMMUNITY_PRINT_TIMEOUT: timedelta = timedelta(minutes=180)
 SEARCH_IMMUNITY_SOON_TIMEOUT: timedelta = timedelta(minutes=60)
@@ -60,11 +60,19 @@ def get_utc_now() -> datetime:
 def get_time_zone():
     return gTimeZone
 
+
 def get_TimeAsTimeZone( aTime: datetime )->datetime:
     sTimeZone = get_time_zone()
     sTime = datetime.strptime( aTime, API_DATETIME_FORMAT_ISO ).astimezone(sTimeZone)
     return sTime
 
+
+def get_BotTimeUTCFormat( aTime: datetime )->datetime:
+    sTimeZone = _timezone.utc
+    print(aTime)
+    sTime = datetime.strptime( aTime, API_DATETIME_FORMAT_ISO ).replace(tzinfo=sTimeZone)
+
+    return sTime
 
 
 def get_time_diff( aStart: datetime, aEnd: datetime)->datetime: #str:
@@ -99,9 +107,10 @@ def getFirstDayOfNextMonth( aYear:int, aMonth:int ) -> datetime:
 
 
 def isTourneyStart() ->bool:
+    return True
     sUtcNow = get_utc_now()
     sTourneyFirstDay = getTourneyStartDate( sUtcNow )
-    
+
     return sUtcNow > sTourneyFirstDay
     
     
@@ -114,8 +123,8 @@ def getTourneyStartDate( aUtcNow:datetime ):
 def isStilLogin( aNow:datetime, aLastLoginDate:datetime, aLastHeartBeat:datetime  ):
     sIsLogin = True
     
-    sLastLoginDate = get_TimeAsTimeZone( aLastLoginDate )
-    sLastHeartBeat = get_TimeAsTimeZone( aLastHeartBeat )
+    sLastLoginDate = get_BotTimeUTCFormat( aLastLoginDate )
+    sLastHeartBeat = get_BotTimeUTCFormat( aLastHeartBeat )
     
     sIsLogin = True
     sTime = None
@@ -123,7 +132,7 @@ def isStilLogin( aNow:datetime, aLastLoginDate:datetime, aLastHeartBeat:datetime
         sTime = sLastHeartBeat
     else:
         sTime = sLastLoginDate
-        
+    
     if aNow - sTime > LOGIN_CHECK_TIMEOUT:
         sIsLogin = False
         

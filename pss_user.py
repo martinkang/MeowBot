@@ -46,12 +46,12 @@ async def _getUserInfoByFunction( aCtx:context,
         await sOptMsg.delete()
     else:  
         sShipInfo = None       
-        sUSerInfo = aUserInfos[0]
+        sUserInfo = aUserInfos[0]
         if aIsNeedShipInfo is True and \
-            _time.isStilLogin( aNow, sUSerInfo['LastLoginDate'], sUSerInfo['LastHeartBeatDate']  ) is not True:
-            sShipInfo = await _ship.get_Inspect_Ship_info( sUSerInfo['Id'] )
+            _time.isStilLogin( aNow, sUserInfo['LastLoginDate'], sUserInfo['LastHeartBeatDate']  ) is not True:
+            sShipInfo = await _ship.get_Inspect_Ship_info( sUserInfo['Id'] )
             
-        sErrMsg, sInfosTxt = aFormatFunc( aNow, sUSerInfo, sShipInfo )
+        sErrMsg, sInfosTxt = aFormatFunc( aNow, sUserInfo, sShipInfo )
     
     return sErrMsg, sInfosTxt
         

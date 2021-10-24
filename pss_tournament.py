@@ -4,6 +4,8 @@ from utils import functions as _func
 from utils import time as _time
 from utils import database as _db
 from utils import type as _type
+from utils import path as _path
+from utils import parse as _parse
 from typing import List
 
 import pss_lookups as lookups
@@ -138,5 +140,29 @@ def isDivisionLetter( aStr: str ) -> bool:
     else:
         sResult = aStr.lower() in [letter.lower() for letter in ALLOWED_DIVISION_LETTERS]
     return sResult
+
+
+async def getStars():
+    sPath = await _path.__get_search_all_fleets_stars()
+    sRawData = await _func.get_data_from_path( sPath )
+
+    sStars = _parse.__xmltree_to_dict( sRawData, 3 )
+    
+    return sStars
+
+
+# async def getDivisionStars(ctx: Context, division: str = None, fleet_data: dict = None, retrieved_date: datetime = None, as_embed: bool = _settings.USE_EMBEDS) -> Union[List[Embed], List[str]]:
+#     if division:
+#         pss_assert.valid_parameter_value(division, 'division', min_length=1, allowed_values=ALLOWED_DIVISION_LETTERS)
+#         if division == '-':
+#             division = None
+#     else:
+#         division = None
+
+#     if fleet_data is None or retrieved_date is None:
+#         data = await core.get_data_from_path(STARS_BASE_PATH)
+#         fleet_infos = utils.convert.xmltree_to_dict3(data)
+#     else:
+#         fleet_infos = fleet_data
 
 
