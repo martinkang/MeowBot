@@ -354,7 +354,7 @@ async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: in
     sCrewReceived      = getEntityData( aUser, 'CrewReceived', _type.INT_TYPE )
     sChampionshipScore = getEntityData( aUser, 'ChampionshipScore', _type.INT_TYPE )
     
-    _func.debug_log( "insertTourneyUserInfo", f"Year : {aYear} Month : {aMonth} ID : {sUserID}" ) 
+    #_func.debug_log( "insertTourneyUserInfo", f"Year : {aYear} Month : {aMonth} ID : {sUserID}" ) 
 
     sData = ( sUserID, sTourneyDate, sUserName, sStarScore, 
               sFleetID,  sFleetJoinDate, sFleetMembership, sTrophy,
@@ -388,7 +388,7 @@ async def insertTourneyFleetInfo( aFleet: _type.EntityInfo, aYear: int, aMonth: 
     sNumOfMembers      = getEntityData( aFleet, 'NumberOfMembers', _type.INT_TYPE )
     sChampionshipScore = getEntityData( aFleet, 'ChampionshipScore', _type.INT_TYPE )
    
-    _func.debug_log( "insertTourneyFleetInfo", f"{sTourneyDate} : {aMonth} ID : {sFleetID}" )  
+    #_func.debug_log( "insertTourneyFleetInfo", f"{sTourneyDate} : {aMonth} ID : {sFleetID}" )  
 
     sData = ( sFleetID, sTourneyDate, sFleetName, sStarScore, 
               sTrophy, lookups.DIVISION_DESIGN_ID_TO_CHAR[str(sDivision)], sNumOfMembers, sChampionshipScore )
