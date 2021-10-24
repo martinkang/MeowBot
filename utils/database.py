@@ -153,7 +153,7 @@ async def try_Create_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.Co
 
         
 async def try_Execute_once( aSql : str, aData = None ) -> bool:
-    _func.debug_log( "try_Execute", aSql )
+    #_func.debug_log( "try_Execute", aSql )
     
     sSuccess = True
     sIsConneted, sPool = await connect()
@@ -177,7 +177,7 @@ async def try_Execute_once( aSql : str, aData = None ) -> bool:
     return sSuccess, sResult
 
 async def try_Execute_with_Cursor( aCur, aSql : str ) -> bool:
-    _func.debug_log( "try_Execute", aSql )
+    #_func.debug_log( "try_Execute", aSql )
 
     sSuccess = False
     try:
