@@ -270,7 +270,7 @@ async def checkAlreadyInTourneyUserData( aYear: int, aMonth: int ):
     else:
         sTourneyUserCount = sResult[0]
 
-    _func.debug_log( "checkAlreadyInTourneyUserData", f"Year : {aYear} Month : {aMonth} isSuccess : {sSuccess} Fleet Count : {sTourneyUserCount}" )
+    _func.debug_log( "checkAlreadyInTourneyUserData", f"Year : {aYear} Month : {aMonth}  User Count : {sTourneyUserCount}" )
     return sSuccess, sTourneyUserCount
 
 
@@ -290,7 +290,7 @@ async def checkAlreadyInTourneyFleetData( aYear: int, aMonth: int ):
     else:
         sTourneyFleetCount = sResult[0]
 
-    _func.debug_log( "checkAlreadyInTourneyFleetData", f"Year : {aYear} Month : {aMonth} isSuccess : {sSuccess} Fleet Count : {sTourneyFleetCount}" )
+    _func.debug_log( "checkAlreadyInTourneyFleetData", f"Year : {aYear} Month : {aMonth}  Fleet Count : {sTourneyFleetCount}" )
     return sSuccess, sTourneyFleetCount
 
 
@@ -310,7 +310,7 @@ async def selectCountTourneyUserData( aYear: int, aMonth: int ):
     else:
         sTourneyUserCount = sResult[0]
 
-    _func.debug_log( "selectCountTourneyUserData", f"Year : {aYear} Month : {aMonth} isSuccess : {sSuccess} Fleet Count : {sTourneyUserCount}" )
+    _func.debug_log( "selectCountTourneyUserData", f"Year : {aYear} Month : {aMonth}  User Count : {sTourneyUserCount}" )
     return sSuccess, sTourneyUserCount
 
 
@@ -331,7 +331,7 @@ async def selectCountTourneyFleetData( aYear: int, aMonth: int ):
     else:
         sTourneyFleetCount = sResult[0]
 
-    _func.debug_log( "selectCountTourneyFleetData", f"Year : {aYear} Month : {aMonth} isSuccess : {sSuccess} Fleet Count : {sTourneyFleetCount}" )
+    _func.debug_log( "selectCountTourneyFleetData", f"Year : {aYear} Month : {aMonth} Fleet Count : {sTourneyFleetCount}" )
     return sSuccess, sTourneyFleetCount
 
 
@@ -374,8 +374,8 @@ async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: in
     %s, %s, %s )""" 
                             
     sSuccess, _ = await try_Execute_once( sSql, sData )
-    # if sSuccess != True:
-    #     print( "insertTourneyUserInfo Fail : " + sSql )
+    if sSuccess != True:
+        print( "insertTourneyUserInfo Fail User ID : " + str( sUserID ) )
     return sSuccess
 
 async def insertTourneyFleetInfo( aFleet: _type.EntityInfo, aYear: int, aMonth: int ):
