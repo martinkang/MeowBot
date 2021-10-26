@@ -237,28 +237,67 @@ def getOnlineDivisionStars( aDivisions, aDivisionStars ):
 
 def getOnlineFleetIDs( aDivisionStars ):
     sResult = []
+    
     for division_design_id, fleet_infos in aDivisionStars.items():
         for i, fleet_info in enumerate(fleet_infos, start=1):
+            sTuple = ()
             fleet_id = escape_markdown(fleet_info['AllianceId'])
-            sResult.append(fleet_id)
+            sScore = escape_markdown(fleet_info['Score'])
+            sTuple = (int(division_design_id), fleet_id, int(sScore) )
+            sResult.append(sTuple)
         
+    sResult.sort(key=lambda x:(x[0], -x[2] ))
+  
     return sResult
 
 
 
-async def getStarsEachFleet( aFleetIDList, aNow ):
+async def getStarsEachFleet( aFleetID, aNow ):
     sKey = await _func.get_access_key()
 
-    for sFleetID in aFleetIDList:
-        sPath = await _path.__get_search_fleet_users_base_path( sKey, sFleetID )
-        sRawData = await _func.get_data_from_path( sPath )
+    sPath = await _path.__get_search_fleet_users_base_path( sKey, aFleetID )
+    sRawData = await _func.get_data_from_path( sPath )
 
-        sFleet_infos = _parse.__xmltree_to_dict( sRawData, 3 )
-        for user_info in sFleet_infos.values():
-            #sLastScore = await _db.select_User_Last_Score( user_info["Id"], aNow.year, aNow.month )
-            await _db.insertOnlineTourneyUserInfo(user_info, aNow.year, aNow.month, aNow.day)
+    sFleet_infos = _parse.__xmltree_to_dict( sRawData, 3 )
+    sAlianceName = None
+    sResult = ''
+    sDesc = ''
+    for user_info in sFleet_infos.values():
+        if sAlianceName is None:
+            sAlianceName = user_info['AllianceName']
+            #sTitle = f'{sAlianceName} Star Score' 
+            sDesc =  f'No / Get Stars / Name / Trophy'
+            break;
 
-        break
+    sStarsList = []
+    sTuple = ()
+    for user_info in sFleet_infos.values():
+        if sAlianceName is None:
+            sAlianceName = user_info['AllianceName']
+
+        sStar, sStarData = _db.getTourneyScores( user_info )
+        sTuple = ( int(sStar), sStarData )
+        sStarsList.append(sTuple)
+
+    sNum = 0
+    sStarsTxt = ''
+    sStarsList.sort(key=lambda x:x[0], reverse=True)
+    for sStars in sStarsList:
+        sNum = sNum + 1
+        sStarsTxt = sStarsTxt + f'{sNum} / ' + str( sStars[1] ) + '\n'
+        if sNum > 30:
+            break
+        
+        
+        #sLastScore = await _db.select_User_Last_Score( user_info["Id"], aNow.year, aNow.month )
+        
+        #await _db.insertOnlineTourneyUserInfo(user_info, aNow.year, aNow.month, aNow.day)
+    #sResult.append( sTitle )
+
+    sResult = sDesc + '\n' + sStarsTxt + '\n'
+    #sResult.append(_type.ZERO_WIDTH_SPACE) 
+    
+    return sAlianceName, sResult
 
     # sDvisions = {}
     # for division_design_id in lookups.DIVISION_DESIGN_ID_TO_CHAR.keys():

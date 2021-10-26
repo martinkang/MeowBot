@@ -16,6 +16,7 @@ from utils import format as _format
 # 여기서는 BackgroundScheduler 를 사용하겠습니다.
 from apscheduler.schedulers.background import BackgroundScheduler
 from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.jobstores.base import JobLookupError
 import time
 
@@ -259,24 +260,37 @@ async def getU( aCtx: context ):
     print( f'ASync Time : {time.time() - start}')
 
 
-@gBot.command(name='토너', aliases=['stars', '별'], brief=['토너 별'] )
-async def getU( aCtx: context, aDivision:str = None ):
+#@gBot.command(name='토너', aliases=['stars', '별'], brief=['토너 별'] )
+@gBot.event
+async def getLastDayStars():# aCtx: context, aDivision:str = None ):
     """
     설명쓰기
     """   
-    return
-    sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
-    if sisAuthorized is not True:
-        await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
-        return
+    # sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
+    # if sisAuthorized is not True:
+    #     await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
+    #     return
+
+    sChannel = gBot.get_channel(int(os.environ.get( 'RANKING_CANNEL_ID' )))
+    print(sChannel)
 
     sOutputEmbed = None
     sNow = _time.get_utc_now()
-    async with aCtx.typing():
-        if _time.isTourneyStart():
-            sDivisionStars = await pss_tournament.getOnlineDivisionStarsData()
-            sFleetIDs = pss_tournament.getOnlineFleetIDs( sDivisionStars )
-            await pss_tournament.getStarsEachFleet( sFleetIDs, sNow )
+    if _time.isTourneyStart():
+        sDivisionStars = await pss_tournament.getOnlineDivisionStarsData()
+        sFleetDatas = pss_tournament.getOnlineFleetIDs( sDivisionStars )
+
+        for sFleetData in sFleetDatas:
+            if sFleetData[0] == 1:
+                sFleetName, sOutputEmbed = await pss_tournament.getStarsEachFleet( sFleetData[1], sNow )
+                sEmb = discord.Embed(title=f'{sFleetName} Stars Score', description=sOutputEmbed, color=0x00aaaa)   
+                await sChannel.send(embed=sEmb)
+            else:
+                break
+            #await _discord.reply_with_output( aCtx, sOutputEmbed )
+
+        return
+        
 
             # if aDivision is None:
             #     #전체 리그의 별 갯수
@@ -289,16 +303,17 @@ async def getU( aCtx: context, aDivision:str = None ):
             #     pss_tournament.getOnlineFeetIDs( sDivisionStars )
             #     pss_tournament.getStarsEachFleet( sDivisionStars )
             #     sOutputEmbed = None
-        else:
-            sOutputEmbed = None
+    #     else:
+    #         sOutputEmbed = None
+    #         return
         
-    if sOutputEmbed is not None:
-        await _discord.reply_with_output( aCtx, sOutputEmbed )
-    else:
-        sOutputEmbed = discord.Embed(title=f'에러 발생', description="결과를 찾을 수 없습니다", color=0x00aaaa)   
-        await aCtx.send(embed=sOutputEmbed)
+    # if sOutputEmbed is not None:
+    #     await _discord.reply_with_output( sChannel, sOutputEmbed )
+    # else:
+    #     sOutputEmbed = discord.Embed(title=f'에러 발생', description="결과를 찾을 수 없습니다", color=0x00aaaa)   
+    #     await sChannel.send(embed=sOutputEmbed)
         
-    return
+    # return
    
    
     
@@ -427,8 +442,7 @@ async def getUserAliveInfo_top( aCtx: context, aTop):
 #     else:
 #         return
 
-def job():
-    print("asdf")
+  
 #==============================================================================================
 # Initialize Bot
 #==============================================================================================
@@ -438,10 +452,12 @@ async def on_ready():
     print( 'User Name : ' + gBot.user.name )
     print( 'Bot ID    : ' + str(gBot.user.id) )
     print( '--------------' )
-    sched = BackgroundScheduler(timezone='UTC')
+    sched = AsyncIOScheduler(timezone='UTC')
+    #sched = BackgroundScheduler(timezone='UTC')
     sched.start()
     
-    sched.add_job(job, 'cron', hour='23', minute='55', id="touney_save")
+    sched.add_job( getLastDayStars, 'cron', hour='23', minute='55', id="touney_save" )
+    #sched.add_job(job, 'cron', hour='16', minute='09', id="touney_save")
     #pingDatatbase.start()
     
 
@@ -459,8 +475,8 @@ async def initBot():
         print( 'Internal Function initilaize Success' )
         await db._init()
         print( 'Database initilaize Success' )            
-        await pss_tournament.initTourneyDB()
-        print( 'Tournament Data initilaize Success' )
+        #await pss_tournament.initTourneyDB()
+        #print( 'Tournament Data initilaize Success' )
         print( 'init Bot Success' )
     except Exception as sEx:
         print( 'init Bot Failure : ' + str(sEx) )

@@ -117,7 +117,7 @@ async def get_data_from_path(path: str) -> str:
         path = path.strip('/')
     base_url = await get_base_url()
     url = f'{base_url}{path}'
-    print(url)
+    #print(url)
     sRawData = None
     sRawData = await __get_data_from_url(url)
     if sRawData is None:

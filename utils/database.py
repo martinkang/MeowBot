@@ -12,6 +12,7 @@ from . import databaseFuncs as _dbFunc
 from . import settings as _set
 from . import time as _time
 from . import type as _type
+from . import emojis as _emojis
 
 from typing import List
 import pss_lookups as lookups
@@ -334,6 +335,24 @@ async def selectCountTourneyFleetData( aYear: int, aMonth: int ):
     _func.debug_log( "selectCountTourneyFleetData", f"Year : {aYear} Month : {aMonth} Fleet Count : {sTourneyFleetCount}" )
     return sSuccess, sTourneyFleetCount
 
+
+def getTourneyScores( aUser: _type.EntityInfo ):
+    sUserID            = aUser['Id']
+    sUserName          = getEntityData( aUser, 'Name', _type.STR_TYPE )
+    sTrophy            = getEntityData( aUser, 'Trophy', _type.INT_TYPE )
+    sStarScore         = getEntityData( aUser, 'AllianceScore', _type.INT_TYPE )
+    sDivStarScore = int(float(sStarScore) * 0.15)
+    sGetStars = 0
+
+    if int( int(sTrophy) / 1000 ) > sDivStarScore:
+        sGetStars = int( int(sTrophy) / 1000 )
+    else:
+        sGetStars = sDivStarScore
+
+
+    sData = f'{_emojis.star}{sGetStars} / {sUserName} / {_emojis.trophy}{sTrophy}'
+    return sStarScore, sData
+    
 
 async def insertOnlineTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: int, aDay: int ):
     sUserID            = aUser['Id']
