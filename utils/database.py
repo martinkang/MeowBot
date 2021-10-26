@@ -335,6 +335,48 @@ async def selectCountTourneyFleetData( aYear: int, aMonth: int ):
     return sSuccess, sTourneyFleetCount
 
 
+async def insertOnlineTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: int, aDay: int ):
+    sUserID            = aUser['Id']
+    sTourneyDate       = _time.getDateTimeFormatFromDate( aYear, aMonth, aDay )
+    sUserName          = getEntityData( aUser, 'Name', _type.STR_TYPE )
+    sStarScore         = getEntityData( aUser, 'AllianceScore', _type.INT_TYPE )
+    sFleetID           = getEntityData( aUser, 'AllianceId', _type.INT_TYPE )
+    sFleetJoinDate     = getEntityData( aUser, 'AllianceJoinDate', _type.DATE_TYPE )
+    sFleetMembership   = getEntityData( aUser, 'AllianceMembership', _type.STR_TYPE )
+    sTrophy            = getEntityData( aUser, 'Trophy', _type.INT_TYPE )
+    sAtkWin            = getEntityData( aUser, 'PVPAttackWins', _type.INT_TYPE )
+    sAtkLose           = getEntityData( aUser, 'PVPAttackLosses', _type.INT_TYPE )
+    sAtkDraw           = getEntityData( aUser, 'PVPAttackDraws', _type.INT_TYPE )
+    sDefWin            = getEntityData( aUser, 'PVPDefenceWins', _type.INT_TYPE )
+    sDefLose           = getEntityData( aUser, 'PVPDefenceLosses', _type.INT_TYPE )
+    sDefDraw           = getEntityData( aUser, 'PVPDefenceDraws', _type.INT_TYPE )
+    sCrewDonated       = getEntityData( aUser, 'CrewDonated', _type.INT_TYPE )
+    sCrewReceived      = getEntityData( aUser, 'CrewReceived', _type.INT_TYPE )
+    sChampionshipScore = getEntityData( aUser, 'ChampionshipScore', _type.INT_TYPE )
+    sNumberOfApprovedMembers = getEntityData( aUser, 'NumberOfApprovedMembers', _type.INT_TYPE )
+
+    sData = ( sUserID, sTourneyDate, sUserName, sStarScore, 
+              sFleetID,  sFleetJoinDate, sFleetMembership, sTrophy,
+              sAtkWin, sAtkLose, sAtkDraw,
+              sDefWin, sDefLose, sDefDraw, 
+              sCrewDonated, sCrewReceived, sChampionshipScore, sNumberOfApprovedMembers )
+    sSql = """
+    INSERT INTO PSS_TOURNEY_USER_TABLE( user_id, tourney_date, user_nick, star_score, 
+    fleet_id, fleet_join_date, fleet_membership, trophy, 
+    attack_win, attack_lose, attack_draw, 
+    defence_win, defence_lose, defence_draw, 
+    crew_donated, crew_received, championship_score, num_approved_members ) 
+    value( %s, %s, %s, %s,         
+    %s, %s, %s, %s, 
+    %s, %s, %s,
+    %s, %s, %s,
+    %s, %s, %s, %s )""" 
+
+    sSuccess, _ = await try_Execute_once( sSql, sData )
+    if sSuccess != True:
+        print( "insertTourneyUserInfo Fail User ID : " + str( sUserID ) )
+
+
 async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: int ):
     sUserID            = aUser['Id']
     sTourneyDate       = _time.getLastDayOfMonth( aYear, aMonth)
@@ -353,30 +395,33 @@ async def insertTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: in
     sCrewDonated       = getEntityData( aUser, 'CrewDonated', _type.INT_TYPE )
     sCrewReceived      = getEntityData( aUser, 'CrewReceived', _type.INT_TYPE )
     sChampionshipScore = getEntityData( aUser, 'ChampionshipScore', _type.INT_TYPE )
+    sNumberOfApprovedMembers = getEntityData( aUser, 'NumberOfApprovedMembers', _type.INT_TYPE )
     
+
     #_func.debug_log( "insertTourneyUserInfo", f"Year : {aYear} Month : {aMonth} ID : {sUserID}" ) 
 
     sData = ( sUserID, sTourneyDate, sUserName, sStarScore, 
               sFleetID,  sFleetJoinDate, sFleetMembership, sTrophy,
               sAtkWin, sAtkLose, sAtkDraw,
               sDefWin, sDefLose, sDefDraw, 
-              sCrewDonated, sCrewReceived, sChampionshipScore )
+              sCrewDonated, sCrewReceived, sChampionshipScore, sNumberOfApprovedMembers )
     sSql = """
     INSERT INTO PSS_TOURNEY_USER_TABLE( user_id, tourney_date, user_nick, star_score, 
     fleet_id, fleet_join_date, fleet_membership, trophy, 
     attack_win, attack_lose, attack_draw, 
     defence_win, defence_lose, defence_draw, 
-    crew_donated, crew_received, championship_score ) 
+    crew_donated, crew_received, championship_score, num_approved_members ) 
     value( %s, %s, %s, %s,         
     %s, %s, %s, %s, 
     %s, %s, %s,
     %s, %s, %s,
-    %s, %s, %s )""" 
+    %s, %s, %s, %s )""" 
                             
     sSuccess, _ = await try_Execute_once( sSql, sData )
     if sSuccess != True:
         print( "insertTourneyUserInfo Fail User ID : " + str( sUserID ) )
     return sSuccess
+
 
 async def insertTourneyFleetInfo( aFleet: _type.EntityInfo, aYear: int, aMonth: int ):
     sFleetID           = aFleet['AllianceId']
@@ -463,6 +508,25 @@ async def select_Table( aTableName: str, aColumnDefinitions: List[_dbFunc.Column
         sSuccess = False
         
     return sSuccess, sResult       
+
+
+async def select_User_Last_Score( aUserID: str, aYear:int, aMonth:int ):
+    _func.debug_log( "select_User_Last_Score", aUserID )
+    
+    sTourneyDate       = _time.getLastDayOfMonth( aYear, aMonth)
+    sData = ( sTourneyDate, sTourneyDate, aUserID )
+    sSql = """
+    SELECT F.TOURNEY_DIVISION, U.USER_ID, U.USER_NICK, U.STAR_SCORE, F.TOURNEY_DATE
+    FROM PSS_TOURNEY_USER_TABLE U, PSS_TOURNEY_FLEET_TABLE F
+    WHERE F.TOURNEY_DATE = %s AND
+        U.TOURNEY_DATE = %s AND
+        U.USER_ID = %s AND
+        U.FLEET_ID = F.FLEET_ID
+    ORDER BY F.TOURNEY_DIVISION, U.STAR_SCORE DESC;""" 
+
+    sSuccess, sResult = await try_Execute_once( sSql, sData ) 
+        
+    return sSuccess, sResult   
 
                 
 async def desc_Table( aTableName: str ):

@@ -48,6 +48,9 @@ class TourneyData(object):
         elif self.__meta['schema_version'] == 6:
             self.__fleets = TourneyData.__create_fleet_data_from_data_v6(data['fleets'], data['users'])
             self.__users = TourneyData.__create_user_dict_from_data_v6(data['users'], self.__fleets)
+        elif self.__meta['schema_version'] == 7:
+            self.__fleets = TourneyData.__create_fleet_data_from_data_v7(data['fleets'], data['users'])
+            self.__users = TourneyData.__create_user_dict_from_data_v6(data['users'], self.__fleets) # No change to prior schema version
         self.__data_date: datetime = utils.parse.formatted_datetime(data['meta']['timestamp'], include_tz=False, include_tz_brackets=False)
 
 
@@ -224,6 +227,27 @@ class TourneyData(object):
             result[ranked_fleet_info[fleet.FLEET_KEY_NAME]]['Ranking'] = str(i)
         return result
 
+
+    @staticmethod
+    def __create_fleet_data_from_data_v7(fleets_data: List[List[Union[int, str]]], users_data: List[List[Union[int, str]]]) -> _type.EntitiesData:
+        result = {}
+        for i, entry in enumerate(fleets_data, 1):
+            alliance_id = str(entry[0])
+            users = [user_info for user_info in users_data if user_info[2] == entry[0]]
+            result[alliance_id] = {
+                'AllianceId': alliance_id,
+                'AllianceName': entry[1],
+                'Score': str(entry[2]),
+                'DivisionDesignId': str(entry[3]),
+                'Trophy': str(entry[4]),
+                'NumberOfMembers': len(users) if users else str(entry[6]),
+                'ChampionshipScore': str(entry[5]),
+                'NumberOfApprovedMembers': str(entry[7])
+            }
+        ranked_fleets_infos = sorted(result.values(), key=lambda fleet_info: (fleet_info['DivisionDesignId'], -int(fleet_info['Score']), -int(fleet_info['Trophy'])))
+        for i, ranked_fleet_info in enumerate(ranked_fleets_infos, 1):
+            result[ranked_fleet_info[fleet.FLEET_KEY_NAME]]['Ranking'] = str(i)
+        return result
 
 
     @staticmethod

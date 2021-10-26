@@ -79,5 +79,6 @@ TOURNAMENT_DATA_START_DATE: datetime = datetime(year=2019, month=10, day=9, hour
 
 USE_EMBEDS: bool = True
 
+LATEST_SETTINGS_BASE_PATH: str = 'SettingService/GetLatestVersion3?deviceType=DeviceTypeAndroid&languageKey='
 
 VERSION: str = '1.3.4.2'

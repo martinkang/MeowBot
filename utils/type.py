@@ -15,6 +15,8 @@ INT_TYPE:int = 0
 STR_TYPE:int = 1
 DATE_TYPE:int = 2
 
+ZERO_WIDTH_SPACE: str = '\u200b'
+
 EntityInfo = Dict[str, 'EntityInfo']
 EntitiesData = Dict[str, EntityInfo]
 _EntityDict = Union[List['_EntityDict'], Dict[str, '_EntityDict']]

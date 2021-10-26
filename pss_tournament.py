@@ -1,3 +1,5 @@
+import calendar
+
 from gdrive import TourneyData, TourneyDataClient
 from utils import settings as _settings
 from utils import functions as _func
@@ -6,7 +8,12 @@ from utils import database as _db
 from utils import type as _type
 from utils import path as _path
 from utils import parse as _parse
+from datetime import datetime
+from utils import emojis as _emojis
 from typing import List
+
+import discord
+from discord.utils import escape_markdown
 
 import pss_lookups as lookups
 
@@ -27,6 +34,9 @@ gTourneyDataClient: TourneyDataClient = TourneyDataClient(
 )
 
 ALLOWED_DIVISION_LETTERS: List[str] = sorted([letter for letter in lookups.DIVISION_CHAR_TO_DESIGN_ID.keys() if letter != '-'])
+DIVISION_DESIGN_DESCRIPTION_PROPERTY_NAME: str = 'DivisionName'
+DIVISION_DESIGN_KEY_NAME: str = 'DivisionDesignId'
+
 
 async def initTourneyDB():
     _func.debug_log( "initTourneyDB" )
@@ -42,7 +52,7 @@ async def initTourneyDB():
         await insertMonthTourneyData( sYear,
                                       1, 
                                       12 )
-    
+
     return sSuccess
      
 
@@ -74,6 +84,7 @@ async def insertMonthTourneyData( aYear: int, aStartMonth: int, aEndMonth: int):
             except Exception as sEx:
                 print( f"insertMonthTourneyData Year : {aYear} Month : {sMonth} is Error : {sEx}" )
          
+
 
 async def insertMonthTourneyUsersData( aTourneyData:TourneyData , aYear: int, aMonth: int):
     _func.debug_log( "insertMonthTourneyUsersData", f"Year : {aYear} Month : {aMonth}" )
@@ -127,11 +138,41 @@ async def insertMonthTourneyFleetsData( aTourneyData:TourneyData , aYear: int, a
     if sFleetCountInDB[0] == sFleetCount:
         sSuccess = await _db.insertLastSavedTourneyFleetData( aYear, aMonth, sFleetCountInDB[0] )       
 
+
+async def insertMonthTourneyOnlineUsersData( aTourneyData:TourneyData , aYear: int, aMonth: int, aDay: int):
+    _func.debug_log( "insertMonthTourneyOnlineUsersData", f"Year : {aYear} Month : {aMonth} Day : {aDay}" )
+
+    sUserCount = 0
+    sSuccessCount = 0  
+
+    for sUser in aTourneyData.user_ids:
+        sUserCount = sUserCount + 1
+        try:
+            sSuccess = await _db.insertTourneyUserInfo( aTourneyData.get_user_data_by_id(sUser), 
+                                                        aYear, 
+                                                        aMonth )                                        
+            if sSuccess:
+                sSuccessCount = sSuccessCount + 1
+        except Exception as sEx:
+            print("insertMonthTourneyData Error : " + sEx + " UserID : " + str(sUser))  
+            sSuccess = False
+
+    print( f"insertMonthTourneyData {aYear} {aMonth} success UserCount : {sUserCount} Insert Success Count : {sSuccessCount}" )   
+    _, sUserCountInDB = await _db.selectCountTourneyUserData( aYear, aMonth )
+    print("sUserCountInDB " + str(sUserCountInDB[0]))
+    print("sUserCount " + str(sUserCount))
+    if sUserCountInDB[0] == sUserCount:
+        sSuccess = await _db.insertLastSavedTourneyUserData( aYear, aMonth, sUserCountInDB[0] )       
+
+
+
+
 def getTourneyData( aYear: int, aMonth: int ) -> TourneyData:
     sData: TourneyData = gTourneyDataClient.get_data( year = aYear, 
                                                       month = aMonth,
                                                       initializing=True )
     return sData
+
 
 def isDivisionLetter( aStr: str ) -> bool:
     sResult = False
@@ -142,27 +183,125 @@ def isDivisionLetter( aStr: str ) -> bool:
     return sResult
 
 
-async def getStars():
+async def getOnlineDivisionStarsData():
     sPath = await _path.__get_search_all_fleets_stars()
     sRawData = await _func.get_data_from_path( sPath )
 
-    sStars = _parse.__xmltree_to_dict( sRawData, 3 )
-    
-    return sStars
+    sFleet_infos = _parse.__xmltree_to_dict( sRawData, 3 )
+    sDvisions = {}
+    for division_design_id in lookups.DIVISION_DESIGN_ID_TO_CHAR.keys():
+        if division_design_id != '0':
+            sDvisions[division_design_id] = [fleet_info for fleet_info in sFleet_infos.values() if fleet_info[_path.DIVISION_DESIGN_KEY_NAME] == division_design_id]
 
 
-# async def getDivisionStars(ctx: Context, division: str = None, fleet_data: dict = None, retrieved_date: datetime = None, as_embed: bool = _settings.USE_EMBEDS) -> Union[List[Embed], List[str]]:
-#     if division:
-#         pss_assert.valid_parameter_value(division, 'division', min_length=1, allowed_values=ALLOWED_DIVISION_LETTERS)
-#         if division == '-':
-#             division = None
-#     else:
-#         division = None
+    return sDvisions
 
-#     if fleet_data is None or retrieved_date is None:
-#         data = await core.get_data_from_path(STARS_BASE_PATH)
-#         fleet_infos = utils.convert.xmltree_to_dict3(data)
-#     else:
-#         fleet_infos = fleet_data
+def getOnlineTotalDivisionStars( aDivisionStars ):
+    result = None
+
+    if aDivisionStars:
+        divisions_texts = []
+        for division_design_id, fleet_infos in aDivisionStars.items():
+            divisions_texts.append((division_design_id, __get_division_stars_as_text(fleet_infos)))
+
+        sNow = _time.get_utc_now()
+        sDivision = { '1': 'A', '2': 'B', '3': 'C', '4': 'D'}
+        for division_design_id, division_text in divisions_texts:
+            sTitle = f'{sNow.month}월 토너먼트 {sDivision[division_design_id]}' 
+            result.append(sTitle)
+            result.extend(division_text)
+            result.append(_type.ZERO_WIDTH_SPACE) 
+
+    return result
+
+def getOnlineDivisionStars( aDivisions, aDivisionStars ):
+    result = None
+
+    if aDivisionStars:
+        divisions_texts = []
+        sDivision = { '1': 'A', '2': 'B', '3': 'C', '4': 'D'}
+
+        for division_design_id, fleet_infos in aDivisionStars.items():
+            if sDivision[division_design_id] == aDivisions.upper():
+                divisions_texts.append((division_design_id, __get_division_stars_as_text(fleet_infos)))
+
+        sNow = _time.get_utc_now()  
+        for division_design_id, division_text in divisions_texts:
+            sTitle = f'{sNow.month}월 토너먼트 {sDivision[division_design_id]}' 
+            result.append(sTitle)
+            result.extend(division_text)
+            result.append(_type.ZERO_WIDTH_SPACE) 
+            break
+
+    return result
+
+def getOnlineFleetIDs( aDivisionStars ):
+    sResult = []
+    for division_design_id, fleet_infos in aDivisionStars.items():
+        for i, fleet_info in enumerate(fleet_infos, start=1):
+            fleet_id = escape_markdown(fleet_info['AllianceId'])
+            sResult.append(fleet_id)
+        
+    return sResult
+
+
+
+async def getStarsEachFleet( aFleetIDList, aNow ):
+    sKey = await _func.get_access_key()
+
+    for sFleetID in aFleetIDList:
+        sPath = await _path.__get_search_fleet_users_base_path( sKey, sFleetID )
+        sRawData = await _func.get_data_from_path( sPath )
+
+        sFleet_infos = _parse.__xmltree_to_dict( sRawData, 3 )
+        for user_info in sFleet_infos.values():
+            #sLastScore = await _db.select_User_Last_Score( user_info["Id"], aNow.year, aNow.month )
+            await _db.insertOnlineTourneyUserInfo(user_info, aNow.year, aNow.month, aNow.day)
+
+        break
+
+    # sDvisions = {}
+    # for division_design_id in lookups.DIVISION_DESIGN_ID_TO_CHAR.keys():
+    #     if division_design_id != '0':
+    #         sDvisions[division_design_id] = [fleet_info for fleet_info in sFleet_infos.values() if fleet_info[_path.DIVISION_DESIGN_KEY_NAME] == division_design_id]
+
+
+    # return sDvisions
+
+
+def __get_division_stars_as_text(fleet_infos: List[_type.EntityInfo]) -> List[str]:
+    lines = []
+    fleet_infos = _func.sort_entities_by(fleet_infos, [('Score', int, True)])
+    fleet_infos_count = len(fleet_infos)
+    for i, fleet_info in enumerate(fleet_infos, start=1):
+        fleet_name = escape_markdown(fleet_info['AllianceName'])
+        additional_info: List[_type.Tuple[str, str]] = []
+        trophies = fleet_info.get('Trophy')
+        if trophies:
+            additional_info.append((trophies, _emojis.trophy))
+        member_count = fleet_info.get('NumberOfMembers')
+        if member_count:
+            additional_info.append((str(member_count), _emojis.members))
+        stars = fleet_info['Score']
+        if i < fleet_infos_count:
+            difference = int(stars) - int(fleet_infos[i]['Score'])
+        else:
+            difference = 0
+        if additional_info:
+            additional_str = f' ({" ".join([" ".join(info) for info in additional_info])})'
+        else:
+            additional_str = ''
+        lines.append(f'**{i:d}.** {stars} (+{difference}) {_emojis.star} {fleet_name}{additional_str}')
+    return lines
+
+
+def __get_division_title(division_design_id: str, divisions_designs_infos: _type.EntitiesData, include_markdown: bool, retrieved_date: datetime) -> str:
+    title = divisions_designs_infos[division_design_id][DIVISION_DESIGN_DESCRIPTION_PROPERTY_NAME]
+    if retrieved_date:
+        title = f'{title} - {calendar.month_abbr[retrieved_date.month]} {retrieved_date.year}'
+    if include_markdown:
+        return f'__**{title}**__'
+    else:
+        return title
 
 

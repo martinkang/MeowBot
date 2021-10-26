@@ -3,7 +3,6 @@ from asyncio.tasks import sleep
 import datetime 
 from typing import Dict, List, Tuple
 
-
 # --------------- Utils ---------------
 from utils import functions as _func
 from utils import database as db
@@ -12,7 +11,12 @@ from utils import discord as _discord
 from utils import format as _format
 
 # --------------- Schedule --------------- 
-
+# 스케줄 종류에는 여러가지가 있는데 대표적으로 BlockingScheduler, BackgroundScheduler 입니다
+# BlockingScheduler 는 단일수행에, BackgroundScheduler은 다수 수행에 사용됩니다.
+# 여기서는 BackgroundScheduler 를 사용하겠습니다.
+from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.jobstores.base import JobLookupError
 import time
 
 # --------------- User Module ---------------
@@ -52,6 +56,7 @@ gBot = commands.Bot(command_prefix='-', status=discord.Status.online, activity=d
 #==============================================================================================
 async def getUserInfoByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool, aSelectFunc, aFormatFunc ):
     sExactName = str(_discord.get_exact_args(aCtx)).strip()
+    print(sExactName)
     sOutputEmbed = None
     async with aCtx.typing():
         sUserInfos = await _user.get_users_infos_by_name( aCtx, sExactName )
@@ -77,10 +82,10 @@ async def getUserInfoByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool,
     return sOutputEmbed
 
 
-async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool, aFormatFunc ):
+async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool, aFormatFunc, aStart:int = 1, aEnd:int = _settings.SEARCH_TOP_RANK  ):
     sOutputEmbed = None
-    sStart = 1
-    sEnd = _settings.SEARCH_TOP_RANK
+    sStart = aStart
+    sEnd = aEnd
     
     async with aCtx.typing():
         sTopUserInfos = await _user._get_top_captains_For_UserInfos( sStart - 1, sEnd ) 
@@ -92,9 +97,11 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
         
         for sUser in sTopUserInfos:
             sInfosTxt = None
+            sIsLogIn = True
             sUserInfos = await _user.get_users_infos_by_name( aCtx, sUser['Name'] )  
             try:
                 for sUserInfo in sUserInfos:
+                    print( f'User ID {sUser["Id"]}  sUserInfo ID : {sUserInfo["Id"]}' )
                     if sUser['Id'] == sUserInfo['Id']:
                         sShipInfo = None
                         if aIsNeedShipInfo is True:
@@ -103,11 +110,14 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
                                 # _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo )
                                 _, sImmunity = _format._get_Immunity( sNow, sShipInfo )
                                 if sImmunity is None or sImmunity <= _time.SEARCH_IMMUNITY_PRINT_TIMEOUT:
+                                    sIsLogIn = False
                                     _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo )
                             else:
+                                sIsLogIn = True
                                 sInfosTxt = None
                                 # _, sInfosTxt = aFormatFunc( sNow, sUserInfo, None )
                         else:
+                            sIsLogIn = False
                             _, sInfosTxt = aFormatFunc( sNow, sUserInfo, None )
                             
                         break    
@@ -117,6 +127,11 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
             
             if sInfosTxt is not None:
                 sOutputList = sOutputList + f'{sRank}. {sInfosTxt}' + '\n'
+            else:
+                if sIsLogIn == False:
+                    print( f'{sUser["Name"]} 를 찾지 못했습니다')
+                else:
+                    print( f'{sUser["Name"]} 로그인 중이라 스킵합니다')
             sRank = sRank + 1
 
         sOutputEmbed = discord.Embed(title=aTitle, description=sOutputList, color=0x00aaaa)
@@ -254,29 +269,35 @@ async def getU( aCtx: context, aDivision:str = None ):
     if sisAuthorized is not True:
         await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
         return
-    
+
+    sOutputEmbed = None
+    sNow = _time.get_utc_now()
     async with aCtx.typing():
         if _time.isTourneyStart():
-            if aDivision is None:
-                sStars = await pss_tournament.getStars()
-                sOutputEmbed = discord.Embed(title="토너먼트 별 현황", description=sStars, color=0x00aaaa)
-                
-                for sStarInfo in sStars:
-                    print(sStarInfo)
-                    print()
-                #sOutputEmbed.set_footer(text="약 3분 정도 오차가 존재할 수 있습니다. / 접속중이면 보호막은 - 로 표기됩니다")
-                # STARS_BASE_PATH 리그/함대별 별
-            elif pss_tournament.isDivisionLetter(aDivision):
-                # STARS_BASE_PATH 리그/함대별 별 여기서 리그만 골라서
-                return
-            else:
-                # 함대별 별. 함대 id 를 찾고 FLEET_USERS_BASE_PATH 구하기
-                return
+            sDivisionStars = await pss_tournament.getOnlineDivisionStarsData()
+            sFleetIDs = pss_tournament.getOnlineFleetIDs( sDivisionStars )
+            await pss_tournament.getStarsEachFleet( sFleetIDs, sNow )
+
+            # if aDivision is None:
+            #     #전체 리그의 별 갯수
+            #     sOutputEmbed = pss_tournament.getOnlineTotalDivisionStars( sDivisionStars )
+            # elif pss_tournament.isDivisionLetter(aDivision):
+            #     # 리그별 함대의 별 갯수
+            #     sOutputEmbed = pss_tournament.getOnlineDivisionStars( aDivision, sDivisionStars )
+            # else:
+            #     # 함대별 별 갯수
+            #     pss_tournament.getOnlineFeetIDs( sDivisionStars )
+            #     pss_tournament.getStarsEachFleet( sDivisionStars )
+            #     sOutputEmbed = None
         else:
-            sErrTxt = '지금은 토너먼트 기간이 아닙니다'
-            sOutputEmbed = discord.Embed(title=f'에러 발생', description=sErrTxt, color=0x00aaaa)   
+            sOutputEmbed = None
         
-    await aCtx.send(embed=sOutputEmbed)
+    if sOutputEmbed is not None:
+        await _discord.reply_with_output( aCtx, sOutputEmbed )
+    else:
+        sOutputEmbed = discord.Embed(title=f'에러 발생', description="결과를 찾을 수 없습니다", color=0x00aaaa)   
+        await aCtx.send(embed=sOutputEmbed)
+        
     return
    
    
@@ -303,7 +324,7 @@ async def getUserInfo( aCtx: Context ):
 
 
 @getUserInfo.group(name='탑', aliases=['랭킹', '랭커', 'top', 'rank'], brief=['탑 플레이어 보호막 정보'], invoke_without_command=True)
-async def getUserInfo_top( aCtx: context ):
+async def getUserInfo_top( aCtx: context, aTop ):
     """
     설명쓰기
     """   
@@ -313,13 +334,23 @@ async def getUserInfo_top( aCtx: context ):
         await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
         return
 
+    if aTop.isdigit() == False:
+        await aCtx.send("검색하고 싶은 숫자를 입력해 주세요.")
+        return
+
+    sTop = int(aTop)
+    if sTop > _settings.SEARCH_TOP_RANK:
+        await aCtx.send( f'랭킹값이 {_settings.SEARCH_TOP_RANK } 보다 크면 {_settings.SEARCH_TOP_RANK } 으로 대체됩니다.')
+        sTop = _settings.SEARCH_TOP_RANK
+
     start = time.time()
     async with aCtx.typing():
         try:
             sOutputEmbed = await getTopUserInfosByFunction( aCtx, 
                                                             f'랭킹. 유저(함대) / 트로피 / 접속 / 보호막',
                                                             NEED_SHIP_INFO, 
-                                                            _format.create_User_Immunity )  
+                                                            _format.create_User_Immunity,
+                                                            aEnd = sTop )  
             sOutputEmbed.set_footer(text="약 3분 정도 오차가 존재할 수 있습니다. / 보호막이 3시간 이하로 남은 유저만 표기됩니다.")
         except Exception as sERR:
             sErrTxt = f'에러발생 : {sERR}'
@@ -352,7 +383,7 @@ async def getUserAliveInfo( aCtx: Context ):
     return
 
 @getUserAliveInfo.group(name='탑', aliases=['랭킹', '랭커', 'top', 'rank'], brief=['탑 플레이어 보호막 정보'], invoke_without_command=True)
-async def getUserAliveInfo_top( aCtx: context ):
+async def getUserAliveInfo_top( aCtx: context, aTop):
     """
     설명쓰기
     """      
@@ -361,12 +392,22 @@ async def getUserAliveInfo_top( aCtx: context ):
         await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
         return
     
+    if aTop.isdigit() == False:
+        await aCtx.send("검색하고 싶은 숫자를 입력해 주세요.")
+        return
+
+    sTop = int(aTop)
+    if sTop > _settings.SEARCH_TOP_RANK:
+        await aCtx.send( f'랭킹값이 {_settings.SEARCH_TOP_RANK } 보다 크면 {_settings.SEARCH_TOP_RANK } 으로 대체됩니다.')
+        sTop = _settings.SEARCH_TOP_RANK
+
     async with aCtx.typing():
         try:
             sOutputEmbed = await getTopUserInfosByFunction( aCtx, 
                                                             f'랭킹. 유저(함대) / 트로피 / 접속',
                                                             DO_NOT_NEED_SHIP_INFO, 
-                                                            _format.create_User_Alive )  
+                                                            _format.create_User_Alive,
+                                                            aEnd = sTop )  
             sOutputEmbed.set_footer(text="약 3분 정도 오차가 존재할 수 있습니다.")
         except Exception as sERR:
             sErrTxt = f'에러발생 : {sERR}'
@@ -386,6 +427,8 @@ async def getUserAliveInfo_top( aCtx: context ):
 #     else:
 #         return
 
+def job():
+    print("asdf")
 #==============================================================================================
 # Initialize Bot
 #==============================================================================================
@@ -395,6 +438,10 @@ async def on_ready():
     print( 'User Name : ' + gBot.user.name )
     print( 'Bot ID    : ' + str(gBot.user.id) )
     print( '--------------' )
+    sched = BackgroundScheduler(timezone='UTC')
+    sched.start()
+    
+    sched.add_job(job, 'cron', hour='23', minute='55', id="touney_save")
     #pingDatatbase.start()
     
 

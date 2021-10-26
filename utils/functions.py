@@ -6,7 +6,7 @@ import requests
 from xml.etree import ElementTree as ET
 
 import re
-from typing import Dict, List , Union
+from typing import Dict, List , Union, Any as _Any, Awaitable, Callable, Iterable, Iterator, Optional, Tuple
 
 import aiohttp
 
@@ -17,10 +17,15 @@ import sys
 sys.path.append(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 from . import settings as _set
 from . import database as _db
+from . import type as _type
+from . import parse as _parse
 
 
 API_SERVER: str = "api2.pixelstarships.com"
 DEFAULT_PRODUCTION_SERVER: str = 'api2.pixelstarships.com'
+
+BASE_API_URL: str = 'https://api.pixelstarships.com/'
+
 
 
 def init():
@@ -100,12 +105,6 @@ def _isAccessKeyIsExpired( aNow: _time.datetime, aKeyDate: _time.datetime) -> bo
     return sIsExpired
         
 
-async def get_base_url(use_default: bool = False) -> str:
-    production_server = DEFAULT_PRODUCTION_SERVER
-    result = f'https://{production_server}/'
-    return result
-
-
 async def __get_data_from_url(url: str) -> str:
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
@@ -118,7 +117,14 @@ async def get_data_from_path(path: str) -> str:
         path = path.strip('/')
     base_url = await get_base_url()
     url = f'{base_url}{path}'
-    return await __get_data_from_url(url)
+    print(url)
+    sRawData = None
+    sRawData = await __get_data_from_url(url)
+    if sRawData is None:
+        sUrl = f'https://{DEFAULT_PRODUCTION_SERVER}/{path}'
+        sRawData = await __get_data_from_url(sUrl)
+   
+    return sRawData
 
 
 async def __get_inspect_ship_base_path(user_id: str) -> str:
@@ -127,12 +133,72 @@ async def __get_inspect_ship_base_path(user_id: str) -> str:
     result = f'ShipService/InspectShip2?accessToken={access_token}&userId={user_id}'
     return result
 
+
+def sort_entities_by(entity_infos: List[_type.EntityInfo], order_info: List[Tuple[str, Callable[[_Any], _Any], bool]]) -> List[_type.EntityInfo]:
+    """order_info is a list of tuples (property_name,transform_function,reverse)"""
+    result = entity_infos
+    if order_info:
+        for i in range(len(order_info), 0, -1):
+            property_name = order_info[i - 1][0]
+            transform_function = order_info[i - 1][1]
+            reverse = to_boolean(order_info[i - 1][2])
+            if transform_function:
+                result = sorted(result, key=lambda entity_info: transform_function(entity_info[property_name]), reverse=reverse)
+            else:
+                result = sorted(result, key=lambda entity_info: entity_info[property_name], reverse=reverse)
+        return result
+    else:
+        return sorted(result)
+
+
+def to_boolean(value: _Any, default_if_none: bool = False) -> bool:
+    if value is None:
+        return default_if_none
+    if isinstance(value, str):
+        try:
+            value = bool(value)
+        except:
+            try:
+                value = float(value)
+            except:
+                try:
+                    value = int(value)
+                except:
+                    return len(value) > 0
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return value > 0
+    if isinstance(value, float):
+        return value > 0.0
+    if isinstance(value, (tuple, list, dict, set)):
+        return len(value) > 0
+    raise NotImplementedError
+
+
 def debug_log( aFunc : str, aLog : str=None):
     if _set.PRINT_DEBUG:
         print( f'DEBUG {aFunc} : {aLog}' )
     
 
+async def get_base_url() -> str:
+    production_server = await __get_production_server()
+    result = f'https://{production_server}/'
+    return result
 
 
+async def __get_production_server(language_key: str = 'en') -> str:
+    latest_settings = await get_latest_settings(language_key=language_key, base_url=BASE_API_URL)
 
+    return latest_settings['ProductionServer']
 
+async def get_latest_settings(language_key: str = 'en', base_url: str = None) -> _type.EntityInfo:
+    if not language_key:
+        language_key = 'en'
+    base_url = base_url or await get_base_url()
+    url = f'{base_url}{_set.LATEST_SETTINGS_BASE_PATH}{language_key}'
+    raw_text = await __get_data_from_url(url)
+    result = _parse.__xmltree_to_dict( raw_text, 3 )
+    maintenance_message = result.get('MaintenanceMessage')
+  
+    return result

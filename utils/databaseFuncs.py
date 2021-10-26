@@ -66,7 +66,10 @@ def _create_schema() -> bool:
         ('Defence_Draw', 'INT', False, False),
         ('Crew_Donated', 'INT', False, False),
         ('Crew_Received', 'INT', False, False),
-        ('Championship_Score', 'INT', False, False)
+        ('Championship_Score', 'INT', False, False),
+        ('Num_Approved_Members', 'INT', False, False),
+        ('Last_Tourney_Division', 'TEXT(2)', False, False),
+        ('Last_Tourney_Score', 'INT', False, False)
     ]
     
     gColumn_Definitions_TOURNEY_FLEET_LIST = [
