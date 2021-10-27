@@ -280,9 +280,10 @@ async def getLastDayStars():# aCtx: context, aDivision:str = None ):
         sDivisionStars = await pss_tournament.getOnlineDivisionStarsData()
         sFleetDatas = pss_tournament.getOnlineFleetIDs( sDivisionStars )
 
+        sKey = await _func.get_access_key()
         for sFleetData in sFleetDatas:
             if sFleetData[0] == 1:
-                sFleetName, sOutputEmbed = await pss_tournament.getStarsEachFleet( sFleetData[1], sNow )
+                sFleetName, sOutputEmbed = await pss_tournament.getStarsEachFleet( sKey, sFleetData[1], sNow )
                 sEmb = discord.Embed(title=f'{sFleetName} Stars Score', description=sOutputEmbed, color=0x00aaaa)   
                 await sChannel.send(embed=sEmb)
             else:
@@ -315,7 +316,46 @@ async def getLastDayStars():# aCtx: context, aDivision:str = None ):
         
     # return
    
-   
+@gBot.command(name='토너', aliases=['stars', '별'], brief=['토너 별'] )
+async def getLastDayStarsUser( aCtx: context, aDivision:str = None ):
+    """
+    설명쓰기
+    """   
+    sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), True )
+    if sisAuthorized is not True:
+        await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
+        return
+
+    async with aCtx.typing():
+        sOutputEmbed = None
+        sNow = _time.get_utc_now()
+        if _time.isTourneyStart():
+            sDivisionStars = await pss_tournament.getOnlineDivisionStarsData()
+            sFleetDatas = pss_tournament.getOnlineFleetIDs( sDivisionStars )
+            
+            if aDivision.upper() == 'A':
+                sDivision = 1
+            elif aDivision.upper() == 'B':
+                sDivision = 2
+            elif aDivision.upper() == 'C':
+                sDivision = 3
+            elif aDivision.upper() == 'D':
+                sDivision = 4
+            else:
+                sDivision = 1
+
+            sKey = await _func.get_access_key()
+            for sFleetData in sFleetDatas:
+                if sFleetData[0] == sDivision:
+                    sFleetName, sOutputEmbed = await pss_tournament.getStarsEachFleet( sKey, sFleetData[1], sNow )
+                    sEmb = discord.Embed(title=f'{sFleetName} Stars Score', description=sOutputEmbed, color=0x00aaaa)   
+                    await aCtx.send(embed=sEmb)
+                else:
+                    break
+
+            
+        return
+    
     
 @gBot.group(name='보호막', aliases=['이뮨', 'immunity', '방어'], brief=['플레이어 보호막 정보'], invoke_without_command=True )
 async def getUserInfo( aCtx: Context ):         
@@ -452,11 +492,11 @@ async def on_ready():
     print( 'User Name : ' + gBot.user.name )
     print( 'Bot ID    : ' + str(gBot.user.id) )
     print( '--------------' )
-    sched = AsyncIOScheduler(timezone='UTC')
+    #sched = AsyncIOScheduler(timezone='UTC')
     #sched = BackgroundScheduler(timezone='UTC')
-    sched.start()
+    #sched.start()
     
-    sched.add_job( getLastDayStars, 'cron', hour='23', minute='55', id="touney_save" )
+    #sched.add_job( getLastDayStars, 'cron', hour='23', minute='55', id="touney_save" )
     #sched.add_job(job, 'cron', hour='16', minute='09', id="touney_save")
     #pingDatatbase.start()
     

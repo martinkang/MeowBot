@@ -252,10 +252,8 @@ def getOnlineFleetIDs( aDivisionStars ):
 
 
 
-async def getStarsEachFleet( aFleetID, aNow ):
-    sKey = await _func.get_access_key()
-
-    sPath = await _path.__get_search_fleet_users_base_path( sKey, aFleetID )
+async def getStarsEachFleet( aKey, aFleetID, aNow ):
+    sPath = await _path.__get_search_fleet_users_base_path( aKey, aFleetID )
     sRawData = await _func.get_data_from_path( sPath )
 
     sFleet_infos = _parse.__xmltree_to_dict( sRawData, 3 )
