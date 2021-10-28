@@ -44,22 +44,27 @@ def create_User_Info( aUserInfo: _type.EntityInfo) -> str:
 
 def create_User_Alive( aNow: datetime, aUserInfo: _type.EntityInfo, _: _type.EntityInfo  ) -> str:
     sErrMsg = None
-    sID = aUserInfo['Id']
-    sName = aUserInfo['Name']
+    try:
+        sID = aUserInfo['Id']
+        sName = aUserInfo['Name']
 
-    sFleet, _ = _get_FleetNClass( aUserInfo )
-    sTrophy = aUserInfo['Trophy']
-    
-    sIsStilLogin = None
-    if _time.isStilLogin( aNow, aUserInfo['LastLoginDate'], aUserInfo['LastHeartBeatDate'] ) is True:
-        sHeart = _emojis.pss_heartbeat
-        sIsStilLogin = '접속'
-    else:
-        sHeart = _emojis.pss_deadHeart
-        sIsStilLogin = '미접'
+        sFleet, _ = _get_FleetNClass( aUserInfo )
+        sTrophy = aUserInfo['Trophy']
         
+        sIsStilLogin = None
+        if _time.isStilLogin( aNow, aUserInfo['LastLoginDate'], aUserInfo['LastHeartBeatDate'] ) is True:
+            sHeart = _emojis.pss_heartbeat
+            sIsStilLogin = '접속'
+        else:
+            sHeart = _emojis.pss_deadHeart
+            sIsStilLogin = '미접'
+            
 
-    _func.debug_log("create_User_Alive", f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}'  )
+        _func.debug_log("create_User_Alive", f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}'  )
+    except Exception as sEx:
+        sErrMsg = str(sEx)
+        print( sErrMsg )
+        
     return sErrMsg, f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}' 
 
 
@@ -100,28 +105,39 @@ def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo:
     sItalic = ""
     
     if aShipInfo is None:
+        print( f'{sName} create_User_Immunity ----')
         sImmunityStr = '-'
     else:
+        print( f'{sName} create_User_Immunity')
         sErrMsg, sImmunity = _get_Immunity( aNow, aShipInfo )
+        print( f'{sName} create_User_Immunity after _get_immu')
         if sErrMsg is not None:
+            print( "create_User_Immunity Error Message : " + sErrMsg )
             return sErrMsg, None
+
+        print( "after get immun ===========================================")
         
         if sImmunity is None:
             sImmunityStr = '없음'
             sUnderLine = "__"
             sBold = "**"
             sItalic = "*"
+            print( "immun is none ===========================================")
         else:
+            print( "immun is not none ===========================================")
             if sImmunity <= _time.SEARCH_IMMUNITY_SOON_TIMEOUT:
                 sUnderLine = "__"
                 
             if sImmunity <= _time.SEARCH_IMMUNITY_TIMEOUT:
                 sBold = "**"
             
+            print( "before sImmunityStr ===========================================")
             sImmunityStr = getTimeFormat( sImmunity )
+            print( "create_User_Immunity sImmunityStr : " + sImmunityStr)
 
     sFleet, _ = _get_FleetNClass( aUserInfo )
     sTrophy = aUserInfo['Trophy']
+    print( "create_User_Immunity Trophy " + str(sTrophy ) )
     
     sHeart = None
     sIsStilLogin = None
@@ -132,7 +148,8 @@ def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo:
         sHeart = _emojis.pss_deadHeart
         sIsStilLogin = '미접'
 
-    sInfosTxt = f'{sItalic}{sUnderLine}{sBold}{sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin} / {_emojis.pss_shield}{sImmunityStr}{sBold}{sUnderLine}{sItalic}'  
+    sInfosTxt = f'{sItalic}{sUnderLine}{sBold}{sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin} / {_emojis.pss_shield}{sImmunityStr}{sBold}{sUnderLine}{sItalic}' 
+    print( sInfosTxt ) 
     return sErrMsg, sInfosTxt
 
 
@@ -154,6 +171,7 @@ def _get_Immunity( aNow:datetime, aInfo: _type.EntityInfo ) ->datetime:
         sErrMsg = "ImmunityDate 를 찾을 수 없습니다. 다시한번 시도해보세요."
         
     _func.debug_log( "_get_Immunity", f'Immun : {sImmunity}  Time : {sTime} Now : {aNow}')
+
     return sErrMsg, sTime
 
 

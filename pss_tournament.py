@@ -283,7 +283,7 @@ async def getStarsEachFleet( aKey, aFleetID, aNow ):
     for sStars in sStarsList:
         sNum = sNum + 1
         sStarsTxt = sStarsTxt + f'{sNum} / ' + str( sStars[1] ) + '\n'
-        if sNum > 30:
+        if sNum == 30:
             break
         
         

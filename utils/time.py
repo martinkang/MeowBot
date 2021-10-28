@@ -35,7 +35,7 @@ PSS_TOURNEY_START_DATETIME: datetime = datetime(year=2019, month=10, day=1)
 
 # ---------- TIMEOUT-----------
 ACCESS_TOKEN_TIMEOUT: timedelta = timedelta(hours=12)
-LOGIN_CHECK_TIMEOUT: timedelta = timedelta(minutes=2)
+LOGIN_CHECK_TIMEOUT: timedelta = timedelta(minutes=10)
 SEARCH_IMMUNITY_TIMEOUT: timedelta = timedelta(minutes=10)
 SEARCH_IMMUNITY_PRINT_TIMEOUT: timedelta = timedelta(minutes=180)
 SEARCH_IMMUNITY_SOON_TIMEOUT: timedelta = timedelta(minutes=60)

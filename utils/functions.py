@@ -117,12 +117,18 @@ async def get_data_from_path(path: str) -> str:
         path = path.strip('/')
     base_url = await get_base_url()
     url = f'{base_url}{path}'
-    #print(url)
+    debug_log( "get_data_from_path", url)
+
+    sErrMsg = "errorMessage="
     sRawData = None
     sRawData = await __get_data_from_url(url)
-    if sRawData is None:
+    if sRawData.find( sErrMsg ) >= 0:
         sUrl = f'https://{DEFAULT_PRODUCTION_SERVER}/{path}'
+        debug_log( "get_data_from_path", sUrl)
         sRawData = await __get_data_from_url(sUrl)
+        if sRawData.find( sErrMsg ) >= 0:
+            print( "get_data_from_path Error Message : " + str( sRawData ) )
+
    
     return sRawData
 

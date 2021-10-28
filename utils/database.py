@@ -351,7 +351,7 @@ def getTourneyScores( aUser: _type.EntityInfo ):
 
 
     sData = f'{_emojis.star}{sGetStars} / {sUserName} / {_emojis.trophy}{sTrophy}'
-    return sStarScore, sData
+    return sGetStars, sData
     
 
 async def insertOnlineTourneyUserInfo( aUser: _type.EntityInfo, aYear: int, aMonth: int, aDay: int ):

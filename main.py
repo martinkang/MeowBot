@@ -98,7 +98,7 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
         
         for sUser in sTopUserInfos:
             sInfosTxt = None
-            sIsLogIn = True
+            sIsLogin = False
             sUserInfos = await _user.get_users_infos_by_name( aCtx, sUser['Name'] )  
             try:
                 for sUserInfo in sUserInfos:
@@ -106,34 +106,31 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
                     if sUser['Id'] == sUserInfo['Id']:
                         sShipInfo = None
                         if aIsNeedShipInfo is True:
-                            if _time.isStilLogin( sNow, sUserInfo['LastLoginDate'], sUserInfo['LastHeartBeatDate'] ) is not True:
+                            sIsLogin = _time.isStilLogin( sNow, sUserInfo['LastLoginDate'], sUserInfo['LastHeartBeatDate'] )
+                            if  sIsLogin is not True:
                                 sShipInfo = await _ship.get_Inspect_Ship_info( sUserInfo['Id'] )
                                 # _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo )
                                 _, sImmunity = _format._get_Immunity( sNow, sShipInfo )
                                 if sImmunity is None or sImmunity <= _time.SEARCH_IMMUNITY_PRINT_TIMEOUT:
-                                    sIsLogIn = False
                                     _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo )
-                            else:
-                                sIsLogIn = True
-                                sInfosTxt = None
-                                # _, sInfosTxt = aFormatFunc( sNow, sUserInfo, None )
                         else:
-                            sIsLogIn = False
                             _, sInfosTxt = aFormatFunc( sNow, sUserInfo, None )
                             
                         break    
             except Exception as sEx:
-                sInfosTxt = None
                 print( f'getTopUserInfosByFunction Exception {sEx}' )
             
             if sInfosTxt is not None:
                 sOutputList = sOutputList + f'{sRank}. {sInfosTxt}' + '\n'
             else:
-                if sIsLogIn == False:
-                    print( f'{sUser["Name"]} 를 찾지 못했습니다')
+                if sIsLogin == True:
+                    print( f'{sUser["Name"]} 는 로그인 중입니다')
                 else:
-                    print( f'{sUser["Name"]} 로그인 중이라 스킵합니다')
+                    print( f'{sUser["Name"]} 를 찾지 못했습니다')
+
             sRank = sRank + 1
+            if sRank % 10 == 0:
+                time.sleep(2)
 
         sOutputEmbed = discord.Embed(title=aTitle, description=sOutputList, color=0x00aaaa)
     else:
@@ -260,16 +257,11 @@ async def getU( aCtx: context ):
     print( f'ASync Time : {time.time() - start}')
 
 
-#@gBot.command(name='토너', aliases=['stars', '별'], brief=['토너 별'] )
 @gBot.event
 async def getLastDayStars():# aCtx: context, aDivision:str = None ):
     """
     설명쓰기
     """   
-    # sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
-    # if sisAuthorized is not True:
-    #     await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
-    #     return
 
     sChannel = gBot.get_channel(int(os.environ.get( 'RANKING_CANNEL_ID' )))
     print(sChannel)
@@ -323,7 +315,7 @@ async def getLastDayStarsUser( aCtx: context, aDivision:str = None ):
     """   
     sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), True )
     if sisAuthorized is not True:
-        await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
+        await aCtx.send("관리자만 이용 가능합니다.")
         return
 
     async with aCtx.typing():
@@ -333,16 +325,19 @@ async def getLastDayStarsUser( aCtx: context, aDivision:str = None ):
             sDivisionStars = await pss_tournament.getOnlineDivisionStarsData()
             sFleetDatas = pss_tournament.getOnlineFleetIDs( sDivisionStars )
             
-            if aDivision.upper() == 'A':
+            if aDivision is None:
                 sDivision = 1
-            elif aDivision.upper() == 'B':
-                sDivision = 2
-            elif aDivision.upper() == 'C':
-                sDivision = 3
-            elif aDivision.upper() == 'D':
-                sDivision = 4
             else:
-                sDivision = 1
+                if aDivision.upper() == 'A':
+                    sDivision = 1
+                elif aDivision.upper() == 'B':
+                    sDivision = 2
+                elif aDivision.upper() == 'C':
+                    sDivision = 3
+                elif aDivision.upper() == 'D':
+                    sDivision = 4
+                else:
+                    sDivision = 1
 
             sKey = await _func.get_access_key()
             for sFleetData in sFleetDatas:
@@ -379,7 +374,7 @@ async def getUserInfo( aCtx: Context ):
 
 
 @getUserInfo.group(name='탑', aliases=['랭킹', '랭커', 'top', 'rank'], brief=['탑 플레이어 보호막 정보'], invoke_without_command=True)
-async def getUserInfo_top( aCtx: context, aTop ):
+async def getUserInfo_top( aCtx: context, aTop = None ):
     """
     설명쓰기
     """   
@@ -389,14 +384,17 @@ async def getUserInfo_top( aCtx: context, aTop ):
         await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
         return
 
-    if aTop.isdigit() == False:
-        await aCtx.send("검색하고 싶은 숫자를 입력해 주세요.")
-        return
-
-    sTop = int(aTop)
-    if sTop > _settings.SEARCH_TOP_RANK:
-        await aCtx.send( f'랭킹값이 {_settings.SEARCH_TOP_RANK } 보다 크면 {_settings.SEARCH_TOP_RANK } 으로 대체됩니다.')
-        sTop = _settings.SEARCH_TOP_RANK
+    if aTop is None:
+        sTop = 30
+    else:   
+        if aTop.isdigit() == False:
+            await aCtx.send("검색하고 싶은 순위를 최대 50까지 입력하세요.")
+            return
+        else:
+            sTop = int(aTop)
+            if sTop > _settings.SEARCH_TOP_RANK:
+                await aCtx.send( f'랭킹값이 {_settings.SEARCH_TOP_RANK } 보다 크면 {_settings.SEARCH_TOP_RANK } 으로 대체됩니다.')
+                sTop = _settings.SEARCH_TOP_RANK
 
     start = time.time()
     async with aCtx.typing():
@@ -438,7 +436,7 @@ async def getUserAliveInfo( aCtx: Context ):
     return
 
 @getUserAliveInfo.group(name='탑', aliases=['랭킹', '랭커', 'top', 'rank'], brief=['탑 플레이어 보호막 정보'], invoke_without_command=True)
-async def getUserAliveInfo_top( aCtx: context, aTop):
+async def getUserAliveInfo_top( aCtx: context, aTop = None):
     """
     설명쓰기
     """      
@@ -447,14 +445,17 @@ async def getUserAliveInfo_top( aCtx: context, aTop):
         await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
         return
     
-    if aTop.isdigit() == False:
-        await aCtx.send("검색하고 싶은 숫자를 입력해 주세요.")
-        return
-
-    sTop = int(aTop)
-    if sTop > _settings.SEARCH_TOP_RANK:
-        await aCtx.send( f'랭킹값이 {_settings.SEARCH_TOP_RANK } 보다 크면 {_settings.SEARCH_TOP_RANK } 으로 대체됩니다.')
-        sTop = _settings.SEARCH_TOP_RANK
+    if aTop is None:
+        sTop = 30
+    else:   
+        if aTop.isdigit() == False:
+            await aCtx.send("검색하고 싶은 순위를 최대 50까지 입력하세요.")
+            return
+        else:
+            sTop = int(aTop)
+            if sTop > _settings.SEARCH_TOP_RANK:
+                await aCtx.send( f'랭킹값이 {_settings.SEARCH_TOP_RANK } 보다 크면 {_settings.SEARCH_TOP_RANK } 으로 대체됩니다.')
+                sTop = _settings.SEARCH_TOP_RANK
 
     async with aCtx.typing():
         try:
@@ -470,18 +471,6 @@ async def getUserAliveInfo_top( aCtx: context, aTop):
         
         await aCtx.send(embed=sOutputEmbed)
 
-
-#==============================================================================================
-# Schedule
-#==============================================================================================
-# @tasks.loop(minute=5)
-# def saveLastDayTourneyStars():
-#     if _time.get_current_tourney_start():
-#         sNow = _time.get_utc_now()
-#         if sNow.hour == 23 and sNow.minute > 55:
-#     else:
-#         return
-
   
 #==============================================================================================
 # Initialize Bot
@@ -492,13 +481,12 @@ async def on_ready():
     print( 'User Name : ' + gBot.user.name )
     print( 'Bot ID    : ' + str(gBot.user.id) )
     print( '--------------' )
-    #sched = AsyncIOScheduler(timezone='UTC')
-    #sched = BackgroundScheduler(timezone='UTC')
-    #sched.start()
     
-    #sched.add_job( getLastDayStars, 'cron', hour='23', minute='55', id="touney_save" )
-    #sched.add_job(job, 'cron', hour='16', minute='09', id="touney_save")
-    #pingDatatbase.start()
+    sched = AsyncIOScheduler(timezone='UTC')
+    sched = BackgroundScheduler(timezone='UTC')
+    sched.start()
+    sched.add_job( getLastDayStars, 'cron', hour='23', minute='55', id="touney_save" )
+    print( 'Tourney Schedule Start' )
     
 
 @tasks.loop(seconds=10)
