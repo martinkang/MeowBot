@@ -53,6 +53,21 @@ gBot = commands.Bot(command_prefix='-', status=discord.Status.online, activity=d
 
 
 #==============================================================================================
+# Temporary User List
+#==============================================================================================
+sRussian = []
+sRussian.append( { 'Id' : '5195724', 'Name' : 'SPACE ENEMY' } )
+sRussian.append( { 'Id' : '3433365', 'Name' : 'atomic samurai' } ) 
+sRussian.append( { 'Id' : '2135741', 'Name' : 'tezzar' } )
+sRussian.append( { 'Id' : '6606727', 'Name' : 'xBiGx' } )
+sRussian.append( { 'Id' : '3608200', 'Name' : 'volax' } )
+sRussian.append( { 'Id' : '2819541', 'Name' : 'Cpt. Laser Beard' } ) 
+sRussian.append( { 'Id' : '4703085', 'Name' : 'Zlоdey' } )
+sRussian.append( { 'Id' : '1228935', 'Name' : 'Taska' } )
+sRussian.append( { 'Id' : '6420614', 'Name' : 'AlfaR1' } )
+sRussian.append( { 'Id' : '3145262', 'Name' : 'Giallar' } )
+    
+#==============================================================================================
 # Bot Commands Sub Functions
 #==============================================================================================
 async def getUserInfoByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool, aSelectFunc, aFormatFunc ):
@@ -83,7 +98,8 @@ async def getUserInfoByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool,
     return sOutputEmbed
 
 
-async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool, aFormatFunc, aStart:int = 1, aEnd:int = _settings.SEARCH_TOP_RANK  ):
+async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool, aFormatFunc, 
+                                    aStart:int = 1, aEnd:int = _settings.SEARCH_TOP_RANK ):
     sOutputEmbed = None
     sStart = aStart
     sEnd = aEnd
@@ -109,7 +125,6 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
                             sIsLogin = _time.isStilLogin( sNow, sUserInfo['LastLoginDate'], sUserInfo['LastHeartBeatDate'] )
                             if  sIsLogin is not True:
                                 sShipInfo = await _ship.get_Inspect_Ship_info( sUserInfo['Id'] )
-                                # _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo )
                                 _, sImmunity = _format._get_Immunity( sNow, sShipInfo )
                                 if sImmunity is None or sImmunity <= _time.SEARCH_IMMUNITY_PRINT_TIMEOUT:
                                     _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo )
@@ -136,6 +151,45 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
     else:
         sInfosTxt = f'Top {_settings.SEARCH_TOP_RANK} 서치가 안됩니다.'
         sOutputEmbed = discord.Embed(title=f'검색 에러', description=sInfosTxt, color=0x00aaaa)
+        
+    return sOutputEmbed
+
+
+async def getListUserInfosByFunction( aCtx:context, aUserList, aTitle:str, aIsNeedShipInfo:bool, aFormatFunc ):
+    sOutputEmbed = None
+    
+    async with aCtx.typing():
+        sOutputList = ''
+        sNow = _time.get_utc_now()
+        
+        for sUser in aUserList:
+            sInfosTxt = None
+            sIsLogin = False
+            sUserInfos = await _user.get_users_infos_by_name( aCtx, sUser['Name'] )  
+            try:
+                for sUserInfo in sUserInfos:
+                    print( f'User ID {sUser["Id"]}  sUserInfo ID : {sUserInfo["Id"]}' )
+                    if sUser['Id'] == sUserInfo['Id']:
+                        sShipInfo = None
+                        if aIsNeedShipInfo is True:
+                            sShipInfo = await _ship.get_Inspect_Ship_info( sUserInfo['Id'] )
+                            _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo, True )
+                        else:
+                            _, sInfosTxt = aFormatFunc( sNow, sUserInfo, None, True )
+                            
+                        break    
+            except Exception as sEx:
+                print( f'getTopUserInfosByFunction Exception {sEx}' )
+            
+            if sInfosTxt is not None:
+                sOutputList = sOutputList + f'{sInfosTxt}' + '\n'
+            else:
+                if sIsLogin == True:
+                    print( f'{sUser["Name"]} 는 로그인 중입니다')
+                else:
+                    print( f'{sUser["Name"]} 를 찾지 못했습니다')
+
+        sOutputEmbed = discord.Embed(title=aTitle, description=sOutputList, color=0x00aaaa)
         
     return sOutputEmbed
 
@@ -413,6 +467,32 @@ async def getUserInfo_top( aCtx: context, aTop = None ):
     print( f'Sync Time : {time.time() - start}')
         
 
+@getUserInfo.group(name='러시안', aliases=['russian'], brief=['러시안 플레이어 보호막 정보'], invoke_without_command=True)
+async def getUserInfo_top( aCtx: context ):
+    """
+    설명쓰기
+    """   
+    sisAuthorized = isAuthorized( aCtx, str(os.environ.get( 'MEOW_CHANNEL_ID' )), False )
+    if sisAuthorized is not True:
+        await aCtx.send("현재는 냥냥봇 채널 또는 관리자만 이용 가능합니다.")
+        return
+
+    start = time.time()
+    async with aCtx.typing():
+        try:
+            sOutputEmbed = await getListUserInfosByFunction( aCtx, 
+                                                            sRussian,
+                                                            f'랭킹. 유저(함대) / 트로피 / 접속 / 보호막',
+                                                            NEED_SHIP_INFO, 
+                                                            _format.create_User_Immunity )  
+            sOutputEmbed.set_footer(text="약 3분 정도 오차가 존재할 수 있습니다. / 보호막이 3시간 이하로 남은 유저만 표기됩니다.")
+        except Exception as sERR:
+            sErrTxt = f'에러발생 : {sERR}'
+            sOutputEmbed = discord.Embed(title=f'에러 발생', description=sErrTxt, color=0x00aaaa)   
+            
+        await aCtx.send(embed=sOutputEmbed)
+    print( f'Sync Time : {time.time() - start}')
+    
 
 @gBot.group(name='접속', aliases=['생존', 'alive', 'heartbeat'], brief=['플레이어 접속 정보'], invoke_without_command=True )
 async def getUserAliveInfo( aCtx: Context ):   

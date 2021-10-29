@@ -126,39 +126,30 @@ def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo:
     sItalic = ""
     
     if aShipInfo is None:
-        print( f'{sName} create_User_Immunity ----')
         sImmunityStr = '-'
     else:
-        print( f'{sName} create_User_Immunity')
         sErrMsg, sImmunity = _get_Immunity( aNow, aShipInfo )
-        print( f'{sName} create_User_Immunity after _get_immu')
         if sErrMsg is not None:
-            print( "create_User_Immunity Error Message : " + sErrMsg )
             return sErrMsg, None
-
-        print( "after get immun ===========================================")
         
         if sImmunity is None:
             sImmunityStr = '없음'
             sUnderLine = "__"
             sBold = "**"
             sItalic = "*"
-            print( "immun is none ===========================================")
         else:
-            print( "immun is not none ===========================================")
             if sImmunity <= _time.SEARCH_IMMUNITY_SOON_TIMEOUT:
                 sUnderLine = "__"
                 
             if sImmunity <= _time.SEARCH_IMMUNITY_TIMEOUT:
                 sBold = "**"
             
-            print( "before sImmunityStr ===========================================")
             sImmunityStr = getTimeFormat( sImmunity )
             print( "create_User_Immunity sImmunityStr : " + sImmunityStr)
 
     sFleet, _ = _get_FleetNClass( aUserInfo )
     sTrophy = aUserInfo['Trophy']
-    print( "create_User_Immunity Trophy " + str(sTrophy ) )
+
     
     sHeart = None
     sIsStilLogin = None
