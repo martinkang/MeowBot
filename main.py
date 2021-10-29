@@ -363,7 +363,7 @@ async def getUserInfo( aCtx: Context ):
         return
     
     sOutputEmbed = await getUserInfoByFunction( aCtx, 
-                                                f'유저(함대) / 트로피 / 접속 / 보호막' + '\n' + f'공격 승 / 패 / 무승부 / 방어 승 / 패 / 무승부', 
+                                                f'유저(함대) / 트로피 / 접속 / 보호막', 
                                                 NEED_SHIP_INFO,
                                                 _user.get_Selected_User_N_Ship_Info,
                                                 _format.create_User_Immunity )  
@@ -400,7 +400,7 @@ async def getUserInfo_top( aCtx: context, aTop = None ):
     async with aCtx.typing():
         try:
             sOutputEmbed = await getTopUserInfosByFunction( aCtx, 
-                                                            f'랭킹. 유저(함대) / 트로피 / 접속 / 보호막' + '\n' + f'공격 승 / 패 / 무승부 / 방어 승 / 패 / 무승부',
+                                                            f'랭킹. 유저(함대) / 트로피 / 접속 / 보호막',
                                                             NEED_SHIP_INFO, 
                                                             _format.create_User_Immunity,
                                                             aEnd = sTop )  
@@ -425,7 +425,7 @@ async def getUserAliveInfo( aCtx: Context ):
         return
     
     sOutputEmbed = await getUserInfoByFunction( aCtx, 
-                                                f'ID / 유저(함대) / 트로피 / 접속' + '\n' + f'공격 승 / 패 / 무승부 / 방어 승 / 패 / 무승부',
+                                                f'ID / 유저(함대) / 트로피 / 접속',
                                                 DO_NOT_NEED_SHIP_INFO, 
                                                 _user.get_Selected_User_Alive_Info, 
                                                 _format.create_User_Alive )  
@@ -460,7 +460,7 @@ async def getUserAliveInfo_top( aCtx: context, aTop = None):
     async with aCtx.typing():
         try:
             sOutputEmbed = await getTopUserInfosByFunction( aCtx, 
-                                                            f'랭킹. 유저(함대) / 트로피 / 접속' + '\n' + f'공격 승 / 패 / 무승부 / 방어 승 / 패 / 무승부',
+                                                            f'랭킹. 유저(함대) / 트로피 / 접속',
                                                             DO_NOT_NEED_SHIP_INFO, 
                                                             _format.create_User_Alive,
                                                             aEnd = sTop )  
