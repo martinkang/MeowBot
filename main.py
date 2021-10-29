@@ -112,9 +112,9 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
                                 # _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo )
                                 _, sImmunity = _format._get_Immunity( sNow, sShipInfo )
                                 if sImmunity is None or sImmunity <= _time.SEARCH_IMMUNITY_PRINT_TIMEOUT:
-                                    _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo )
+                                    _, sInfosTxt = aFormatFunc( sNow, sUserInfo, sShipInfo, True )
                         else:
-                            _, sInfosTxt = aFormatFunc( sNow, sUserInfo, None )
+                            _, sInfosTxt = aFormatFunc( sNow, sUserInfo, None, True )
                             
                         break    
             except Exception as sEx:

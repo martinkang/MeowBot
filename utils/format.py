@@ -42,7 +42,7 @@ def create_User_Info( aUserInfo: _type.EntityInfo) -> str:
 
 
 
-def create_User_Alive( aNow: datetime, aUserInfo: _type.EntityInfo, _: _type.EntityInfo  ) -> str:
+def create_User_Alive( aNow: datetime, aUserInfo: _type.EntityInfo, _: _type.EntityInfo, aDetail = False  ) -> str:
     sErrMsg = None
     try:
         sID = aUserInfo['Id']
@@ -72,10 +72,15 @@ def create_User_Alive( aNow: datetime, aUserInfo: _type.EntityInfo, _: _type.Ent
         sErrMsg = str(sEx)
         print( sErrMsg )
         
-    sInfoTxt = f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}' + '\n' + \
-               f'공격 승 / 패 / 무승부 : {sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw}' + '\n' + \
-               f'방어 승 / 패 / 무승부 : {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}'
-    return sErrMsg, 
+    sInfoTxt = ''
+    if aDetail:
+        sInfoTxt = f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}' + '\n' + \
+                f'공격 승 / 패 / 무승부 : {sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw}' + '\n' + \
+                f'방어 승 / 패 / 무승부 : {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}'
+    else:
+        sInfoTxt = f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}'
+
+    return sErrMsg, sInfoTxt
 
 
 
@@ -102,7 +107,7 @@ def _get_LastHeartBeat( aNow:datetime, aUserInfo: _type.EntityInfo ) ->datetime:
 
 
 
-def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo: _type.EntityInfo ) -> str:
+def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo: _type.EntityInfo, aDetail = False ) -> str:
     sName = aUserInfo['Name']
     sPvpAtkWin = aUserInfo['PVPAttackWins']
     sPvpAtkLose = aUserInfo['PVPAttackLosses'] 
@@ -164,10 +169,14 @@ def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo:
         sHeart = _emojis.pss_deadHeart
         sIsStilLogin = '미접'
 
-    sInfosTxt = f'{sItalic}{sUnderLine}{sBold}{sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin} / {_emojis.pss_shield}{sImmunityStr}{sBold}{sUnderLine}{sItalic}' + '\n' + \
-                f'공격 승 / 패 / 무승부 : {sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw}' + '\n' + \
-                f'방어 승 / 패 / 무승부 : {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}'
-    print( sInfosTxt ) 
+    sInfosTxt = ''
+    if aDetail:
+        sInfosTxt = f'{sItalic}{sUnderLine}{sBold}{sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin} / {_emojis.pss_shield}{sImmunityStr}{sBold}{sUnderLine}{sItalic}' + '\n' + \
+                    f'공격 승 / 패 / 무승부 : {sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw}' + '\n' + \
+                    f'방어 승 / 패 / 무승부 : {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}'
+    else:
+        sInfosTxt = f'{sItalic}{sUnderLine}{sBold}{sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin} / {_emojis.pss_shield}{sImmunityStr}{sBold}{sUnderLine}{sItalic}'
+
     return sErrMsg, sInfosTxt
 
 
