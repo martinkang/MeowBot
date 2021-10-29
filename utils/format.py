@@ -48,6 +48,13 @@ def create_User_Alive( aNow: datetime, aUserInfo: _type.EntityInfo, _: _type.Ent
         sID = aUserInfo['Id']
         sName = aUserInfo['Name']
 
+        sPvpAtkWin = aUserInfo['PVPAttackWins']
+        sPvpAtkLose = aUserInfo['PVPAttackLosses'] 
+        sPvpAtkDraw = aUserInfo['PVPAttackDraws'] 
+        sPvpDfcWin = aUserInfo['PVPDefenceWins'] 
+        sPvpDfcLose = aUserInfo['PVPDefenceLosses'] 
+        sPvpDfcDraw = aUserInfo['PVPDefenceDraws'] 
+
         sFleet, _ = _get_FleetNClass( aUserInfo )
         sTrophy = aUserInfo['Trophy']
         
@@ -60,12 +67,14 @@ def create_User_Alive( aNow: datetime, aUserInfo: _type.EntityInfo, _: _type.Ent
             sIsStilLogin = '미접'
             
 
-        _func.debug_log("create_User_Alive", f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}'  )
+        _func.debug_log("create_User_Alive", f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}')
     except Exception as sEx:
         sErrMsg = str(sEx)
         print( sErrMsg )
         
-    return sErrMsg, f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}' 
+    sInfoTxt = f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}' + '\n' + \
+               f'{sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw} / {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}' 
+    return sErrMsg, 
 
 
 
@@ -94,6 +103,12 @@ def _get_LastHeartBeat( aNow:datetime, aUserInfo: _type.EntityInfo ) ->datetime:
 
 def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo: _type.EntityInfo ) -> str:
     sName = aUserInfo['Name']
+    sPvpAtkWin = aUserInfo['PVPAttackWins']
+    sPvpAtkLose = aUserInfo['PVPAttackLosses'] 
+    sPvpAtkDraw = aUserInfo['PVPAttackDraws'] 
+    sPvpDfcWin = aUserInfo['PVPDefenceWins'] 
+    sPvpDfcLose = aUserInfo['PVPDefenceLosses'] 
+    sPvpDfcDraw = aUserInfo['PVPDefenceDraws'] 
     
     _func.debug_log("create_User_Immunity", f'Name : {sName}')
     
@@ -148,7 +163,8 @@ def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo:
         sHeart = _emojis.pss_deadHeart
         sIsStilLogin = '미접'
 
-    sInfosTxt = f'{sItalic}{sUnderLine}{sBold}{sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin} / {_emojis.pss_shield}{sImmunityStr}{sBold}{sUnderLine}{sItalic}' 
+    sInfosTxt = f'{sItalic}{sUnderLine}{sBold}{sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin} / {_emojis.pss_shield}{sImmunityStr}{sBold}{sUnderLine}{sItalic}' + '\n' + \
+               f'{sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw} / {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}' 
     print( sInfosTxt ) 
     return sErrMsg, sInfosTxt
 
