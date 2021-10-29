@@ -118,7 +118,6 @@ async def getTopUserInfosByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:b
             sUserInfos = await _user.get_users_infos_by_name( aCtx, sUser['Name'] )  
             try:
                 for sUserInfo in sUserInfos:
-                    print( f'User ID {sUser["Id"]}  sUserInfo ID : {sUserInfo["Id"]}' )
                     if sUser['Id'] == sUserInfo['Id']:
                         sShipInfo = None
                         if aIsNeedShipInfo is True:

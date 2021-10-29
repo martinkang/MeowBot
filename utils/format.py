@@ -11,7 +11,6 @@ from . import emojis as _emojis
 
 
 def create_User_Info( aUserInfo: _type.EntityInfo) -> str:
-    print(aUserInfo)
     sID = aUserInfo['Id']
     sName = aUserInfo['Name']
     sCreate = aUserInfo['CreationDate']
@@ -145,7 +144,6 @@ def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo:
                 sBold = "**"
             
             sImmunityStr = getTimeFormat( sImmunity )
-            print( "create_User_Immunity sImmunityStr : " + sImmunityStr)
 
     sFleet, _ = _get_FleetNClass( aUserInfo )
     sTrophy = aUserInfo['Trophy']

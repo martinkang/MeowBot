@@ -155,11 +155,8 @@ async def get_fleet_infos_by_name( _: Context, aFleetName: str ) -> List[_type.E
 async def __get_fleet_data( aFleetName: str) -> _type.EntitiesData:
     sAccessToken = await _func.get_access_key()
     sPath = await  _path.__get_search_fleets_base_path( sAccessToken, aFleetName )
-    print(sPath)
     sRawData = await _func.get_data_from_path( sPath )
-    print(sRawData)
     sFleet_infos = _parse.__xmltree_to_dict( sRawData, 3 )
-    print(sFleet_infos)
     return sFleet_infos
 
 
@@ -168,14 +165,10 @@ async def get_User_infos_by_Fleet_ID( _: Context, aFleetID: str ) -> List[_type.
     return sFleetInfos
 
 async def __get_fleet_users_data_by_ID( aFleetID: str) -> _type.EntitiesData:
-    print("__get_fleet_users_data_by_ID " + aFleetID )
     sAccessToken = await _func.get_access_key()
     sPath = await  _path.__get_search_fleet_users_base_path( sAccessToken, aFleetID )
-    print(sPath)
     sRawData = await _func.get_data_from_path( sPath )
-    print(sRawData)
     sUsers_infos = _parse.__xmltree_to_dict( sRawData, 3 )
-    print(sUsers_infos)
     return sUsers_infos
 
 
