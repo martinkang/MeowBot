@@ -51,7 +51,7 @@ async def _getUserInfoByFunction( aCtx:context,
             _time.isStilLogin( aNow, sUserInfo['LastLoginDate'], sUserInfo['LastHeartBeatDate']  ) is not True:
             sShipInfo = await _ship.get_Inspect_Ship_info( sUserInfo['Id'] )
             
-        sErrMsg, sInfosTxt = aFormatFunc( aNow, sUserInfo, sShipInfo )
+        sErrMsg, sInfosTxt = aFormatFunc( aNow, sUserInfo, sShipInfo, True )
     
     return sErrMsg, sInfosTxt
         
@@ -73,7 +73,7 @@ async def get_Selected_User_Alive_Info( aCtx: Context, aNow:datetime,  aUserIDSe
         if int(sSelectMsg.content) in aUserIDSet:
             for sUserInfo in aUserInfos:
                 if aUserIDSet[int(sSelectMsg.content)] == sUserInfo['Id']:
-                    sErrMsg, sInfosTxt = _format.create_User_Alive( aNow, sUserInfo, None )
+                    sErrMsg, sInfosTxt = _format.create_User_Alive( aNow, sUserInfo, None, True )
                     break    
     return sErrMsg, sInfosTxt
                     
