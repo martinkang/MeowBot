@@ -73,7 +73,8 @@ def create_User_Alive( aNow: datetime, aUserInfo: _type.EntityInfo, _: _type.Ent
         print( sErrMsg )
         
     sInfoTxt = f'{sID} / {sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin}' + '\n' + \
-               f'공격 승 / 패 / 무승부 / 방어 승 / 패 / 무승부 : {sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw} / {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}' 
+               f'공격 승 / 패 / 무승부 : {sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw}' + '\n' + \
+               f'방어 승 / 패 / 무승부 : {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}'
     return sErrMsg, 
 
 
@@ -164,7 +165,8 @@ def create_User_Immunity( aNow:datetime, aUserInfo: _type.EntityInfo, aShipInfo:
         sIsStilLogin = '미접'
 
     sInfosTxt = f'{sItalic}{sUnderLine}{sBold}{sName}{sFleet} / {_emojis.trophy}{sTrophy} / {sHeart}{sIsStilLogin} / {_emojis.pss_shield}{sImmunityStr}{sBold}{sUnderLine}{sItalic}' + '\n' + \
-               f'공격 승 / 패 / 무승부 / 방어 승 / 패 / 무승부 : {sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw} / {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}' 
+                f'공격 승 / 패 / 무승부 : {sPvpAtkWin} / {sPvpAtkLose} / {sPvpAtkDraw}' + '\n' + \
+                f'방어 승 / 패 / 무승부 : {sPvpDfcWin} / {sPvpDfcLose} / {sPvpDfcDraw}'
     print( sInfosTxt ) 
     return sErrMsg, sInfosTxt
 
