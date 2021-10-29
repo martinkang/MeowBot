@@ -128,7 +128,7 @@ async def get_Selected_User_N_Ship_Info( aCtx: Context, aNow:datetime, aUserIDSe
                     if _time.isStilLogin( aNow, sUserInfo['LastLoginDate'], sUserInfo['LastHeartBeatDate']  ) is not True:
                         sShipInfo = await _ship.get_Inspect_Ship_info( sUserInfo['Id'] )
                         
-                    sErrMsg, sInfosTxt = _format.create_User_Immunity( aNow, sUserInfo, sShipInfo )
+                    sErrMsg, sInfosTxt = _format.create_User_Immunity( aNow, sUserInfo, sShipInfo, True )
                     break    
                 
     return sErrMsg, sInfosTxt

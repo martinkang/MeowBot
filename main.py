@@ -561,10 +561,10 @@ async def on_ready():
     print( 'Bot ID    : ' + str(gBot.user.id) )
     print( '--------------' )
     
-    sched = AsyncIOScheduler(timezone='UTC')
-    sched = BackgroundScheduler(timezone='UTC')
-    sched.start()
-    sched.add_job( getLastDayStars, 'cron', hour='23', minute='55', id="touney_save" )
+    #sched = AsyncIOScheduler(timezone='UTC')
+    #sched = BackgroundScheduler(timezone='UTC')
+    #sched.start()
+    #sched.add_job( getLastDayStars, 'cron', hour='23', minute='55', id="touney_save" )
     print( 'Tourney Schedule Start' )
     
 
