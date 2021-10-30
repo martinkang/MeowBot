@@ -69,7 +69,6 @@ def get_TimeAsTimeZone( aTime: datetime )->datetime:
 
 def get_BotTimeUTCFormat( aTime: datetime )->datetime:
     sTimeZone = _timezone.utc
-    print(aTime)
     sTime = datetime.strptime( aTime, API_DATETIME_FORMAT_ISO ).replace(tzinfo=sTimeZone)
 
     return sTime

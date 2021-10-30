@@ -72,7 +72,6 @@ sRussian.append( { 'Id' : '3145262', 'Name' : 'Giallar' } )
 #==============================================================================================
 async def getUserInfoByFunction( aCtx:context, aTitle:str, aIsNeedShipInfo:bool, aSelectFunc, aFormatFunc ):
     sExactName = str(_discord.get_exact_args(aCtx)).strip()
-    print(sExactName)
     sOutputEmbed = None
     async with aCtx.typing():
         sUserInfos = await _user.get_users_infos_by_name( aCtx, sExactName )
@@ -167,7 +166,6 @@ async def getListUserInfosByFunction( aCtx:context, aUserList, aTitle:str, aIsNe
             sUserInfos = await _user.get_users_infos_by_name( aCtx, sUser['Name'] )  
             try:
                 for sUserInfo in sUserInfos:
-                    print( f'User ID {sUser["Id"]}  sUserInfo ID : {sUserInfo["Id"]}' )
                     if sUser['Id'] == sUserInfo['Id']:
                         sShipInfo = None
                         if aIsNeedShipInfo is True:
@@ -317,7 +315,6 @@ async def getLastDayStars():# aCtx: context, aDivision:str = None ):
     """   
 
     sChannel = gBot.get_channel(int(os.environ.get( 'RANKING_CANNEL_ID' )))
-    print(sChannel)
 
     sOutputEmbed = None
     sNow = _time.get_utc_now()
